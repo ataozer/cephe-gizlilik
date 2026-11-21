@@ -115,6 +115,13 @@ textarea{resize:vertical;min-height:130px}
 .oneri .arac{gap:6px}
 .oneri .dugme.ikincil{padding:8px 12px;font-size:13px}
 .dugme.tehlike{border-color:var(--kirmizi);color:#ff8b78}
+.esle{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px dashed var(--cizgi);border-radius:4px;background:var(--yuzey2)}
+.esle textarea{min-height:96px;font:13px/1.45 var(--kod)}
+.satir.esl{background:var(--yesil-z);cursor:default}
+.satir.esl .ep{color:#d8f5dc}
+.etk.esl{font:600 10px/1 var(--kod);letter-spacing:.12em;padding:4px 6px;border-radius:3px;background:var(--yesil);color:#08140a;align-self:flex-start}
+.esle-ozet{font-size:13px;color:var(--soluk);font-variant-numeric:tabular-nums}
+.esle-yok{font:500 12px/1.5 var(--kod);color:var(--soluk);word-break:break-all}
 </style>
 </head>
 <body>
@@ -220,6 +227,17 @@ textarea{resize:vertical;min-height:130px}
     </div>
 
     <div id="yeniBolum" class="alan" style="gap:12px">
+      <div class="esle">
+        <label for="elleGir">Elle girdiğim e-postalar</label>
+        <textarea id="elleGir" rows="4" placeholder="Adresleri yapıştır: virgülle, boşlukla ya da alt alta"></textarea>
+        <div class="esle-ozet" id="esleOzet">Yazdığın adresler bekleyenlerle otomatik eşleşir.</div>
+        <button class="dugme ikincil genis" type="button" id="esleDugme">Eşleşen mailler (0)</button>
+        <div id="eslePanel" class="alan" hidden style="gap:10px">
+          <div class="liste" id="esleListe"></div>
+          <div class="esle-yok" id="esleYok"></div>
+          <button class="dugme yesil" type="button" id="onaylaDugme">Kaydı onayla</button>
+        </div>
+      </div>
       <div class="arac">
         <button class="dugme ikincil" type="button" id="hepsiSec">Tümünü seç</button>
         <button class="dugme ikincil" type="button" id="kopyalaDugme">Seçilenleri kopyala</button>
@@ -427,10 +445,11 @@ textarea{resize:vertical;min-height:130px}
   /* ---------- Yönetici ---------- */
   var yeniler = [], secili = {}, aktifSekme = "yeni", panelKuruldu = false;
   function satir(k, secimli){
+    var es = secimli && esleSet[k.id];
     var el = document.createElement(secimli ? "label" : "div");
-    el.className = "satir";
+    el.className = "satir" + (es ? " esl" : "");
     if (secimli) {
-      var c = document.createElement("input"); c.type = "checkbox"; c.checked = !!secili[k.id];
+      var c = document.createElement("input"); c.type = "checkbox"; c.checked = !es && !!secili[k.id]; c.disabled = !!es;
       c.onchange = function(){ secili[k.id] = c.checked; };
       el.appendChild(c);
     }
@@ -438,7 +457,9 @@ textarea{resize:vertical;min-height:130px}
     var ep = document.createElement("span"); ep.className = "ep"; ep.textContent = k.eposta;
     var zm = document.createElement("span"); zm.className = "zm";
     zm.textContent = secimli ? "Başvuru: " + zaman(k.olusturma) : "Tamamlandı: " + zaman(k.tamamlanma);
-    ic.appendChild(ep); ic.appendChild(zm); el.appendChild(ic);
+    ic.appendChild(ep); ic.appendChild(zm);
+    if (es) { var et = document.createElement("span"); et.className = "etk esl"; et.textContent = "EŞLEŞTİ"; ic.appendChild(et); }
+    el.appendChild(ic);
     return el;
   }
   function liste(kap, dizi, secimli, bosMetin){
@@ -470,7 +491,7 @@ textarea{resize:vertical;min-height:130px}
     API.listeIzle("beklemede", function(d){
       d.sort(function(a,b){ return ms(a.olusturma) - ms(b.olusturma); });
       d.forEach(function(k){ if (!(k.id in secili)) secili[k.id] = true; });
-      yeniler = d; yeniCiz();
+      yeniler = d; esleHesapla();
     }, hata);
     API.oneriIzle(function(d){
       d.sort(function(a,b){ return ms(b.olusturma) - ms(a.olusturma); });
@@ -478,6 +499,7 @@ textarea{resize:vertical;min-height:130px}
     }, function(){ $("oneriListe").innerHTML = '<div class="bos">Öneriler okunamadı. Firestore kurallarında öneriler bölümü yayınlanmamış olabilir.</div>'; });
     API.listeIzle("tamamlandi", function(d){
       d.sort(function(a,b){ return ms(b.tamamlanma) - ms(a.tamamlanma); });
+      tamamlar = d; esleHesapla();
       var s = $("tamamSay"); s.textContent = d.length;
       liste($("tamamListe"), d, false, "Henüz tamamlanan kayıt yok.");
     });
@@ -515,8 +537,58 @@ textarea{resize:vertical;min-height:130px}
   }
   var sonOneriler = [];
   $("hepsiSec").onclick = function(){
-    var hepsi = yeniler.every(function(k){ return secili[k.id]; });
-    yeniler.forEach(function(k){ secili[k.id] = !hepsi; }); yeniCiz();
+    var acik = yeniler.filter(function(k){ return !esleSet[k.id]; });
+    var hepsi = acik.every(function(k){ return secili[k.id]; });
+    acik.forEach(function(k){ secili[k.id] = !hepsi; }); yeniCiz();
+  };
+
+  /* ---------- Elle girilen adreslerle eşleştirme ---------- */
+  var esleSet = {}, esleler = [], tamamlar = [];
+  try { $("elleGir").value = LS.al("beta_elle") || ""; } catch(e){}
+  function elleAdresler(){
+    var g = {};
+    $("elleGir").value.toLowerCase().split(/[\s,;]+/).forEach(function(x){
+      x = x.replace(/^[<("']+|[>)"'.]+$/g, "");
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)) g[x] = true;
+    });
+    return g;
+  }
+  function esleHesapla(){
+    var g = elleAdresler(), eski = esleSet;
+    esleSet = {};
+    esleler = yeniler.filter(function(k){ return g[(k.eposta || "").toLowerCase()]; });
+    esleler.forEach(function(k){ esleSet[k.id] = true; secili[k.id] = false; });
+    Object.keys(eski).forEach(function(id){ if (!esleSet[id]) secili[id] = true; });
+    var bekleyen = {}, tamam = {};
+    yeniler.forEach(function(k){ bekleyen[(k.eposta || "").toLowerCase()] = true; });
+    tamamlar.forEach(function(k){ tamam[(k.eposta || "").toLowerCase()] = true; });
+    var hepsi = Object.keys(g), zaten = hepsi.filter(function(e){ return tamam[e]; }),
+        yok = hepsi.filter(function(e){ return !bekleyen[e] && !tamam[e]; });
+    $("esleOzet").textContent = hepsi.length
+      ? hepsi.length + " adres girildi · " + esleler.length + " eşleşti" + (zaten.length ? " · " + zaten.length + " zaten onaylı" : "") + (yok.length ? " · " + yok.length + " bekleyenlerde yok" : "")
+      : "Yazdığın adresler bekleyenlerle otomatik eşleşir.";
+    $("esleDugme").textContent = "Eşleşen mailler (" + esleler.length + ")";
+    liste($("esleListe"), esleler, false, "Eşleşen bekleyen adres yok.");
+    Array.prototype.forEach.call($("esleListe").querySelectorAll(".zm"), function(z, i){ if (esleler[i]) z.textContent = "Başvuru: " + zaman(esleler[i].olusturma); });
+    $("esleYok").textContent = yok.length ? "Bekleyenlerde olmayan: " + yok.join(", ") : "";
+    $("onaylaDugme").disabled = !esleler.length;
+    yeniCiz();
+  }
+  var esleZaman = null;
+  $("elleGir").addEventListener("input", function(){
+    LS.koy("beta_elle", this.value);
+    clearTimeout(esleZaman); esleZaman = setTimeout(esleHesapla, 250);
+  });
+  $("esleDugme").onclick = function(){ $("eslePanel").hidden = !$("eslePanel").hidden; };
+  $("onaylaDugme").onclick = function(){
+    var ids = esleler.map(function(k){ return k.id; });
+    if (!ids.length) { bilgi("Eşleşen adres yok."); return; }
+    var d = this; d.disabled = true; d.textContent = "Onaylanıyor…";
+    API.tamamla(ids).then(function(){
+      bilgi(ids.length + " kayıt onaylandı. Oyuncuların ekranı yeşile döndü.");
+      $("eslePanel").hidden = true;
+    }).catch(function(){ bilgi("Onaylanamadı, tekrar deneyin."); })
+      .then(function(){ d.textContent = "Kaydı onayla"; d.disabled = !esleler.length; });
   };
   $("kopyalaDugme").onclick = function(){
     var metin = yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.eposta; }).join(", ");
