@@ -54,7 +54,7 @@ p{margin:0}
 .dugme.yesil{background:var(--yesil);color:#08140a;box-shadow:0 3px 0 #2c6333}
 :focus-visible{outline:2px solid var(--pirinc);outline-offset:2px}
 label[for]{font:500 12px/1 var(--kod);letter-spacing:.12em;text-transform:uppercase;color:var(--soluk)}
-input[type=email],input[type=password],input[type=url],input[type=text]{width:100%;font:16px/1.3 var(--govde);color:var(--metin);
+input[type=email],input[type=password],input[type=url],input[type=text],textarea{width:100%;font:16px/1.3 var(--govde);color:var(--metin);
   background:var(--zemin);border:1px solid var(--cizgi);border-radius:4px;padding:14px 12px}
 input:focus{border-color:var(--pirinc);outline:none}
 .alan{display:flex;flex-direction:column;gap:8px}
@@ -75,7 +75,7 @@ input:focus{border-color:var(--pirinc);outline:none}
 .demo{font:500 12px/1.4 var(--kod);color:var(--pirinc);border:1px dashed var(--pirinc);padding:8px 10px;border-radius:4px}
 /* Yönetici */
 .sekmeler{display:flex;gap:8px;flex-wrap:wrap}
-.sekme{flex:1;min-width:150px;appearance:none;cursor:pointer;border:1px solid var(--cizgi);background:var(--yuzey2);color:var(--metin);
+.sekme{flex:1;min-width:110px;appearance:none;cursor:pointer;border:1px solid var(--cizgi);background:var(--yuzey2);color:var(--metin);
   border-radius:4px;padding:12px 10px;font:14px/1.15 var(--baslik);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
 .sekme.on{border-color:var(--pirinc);color:var(--pirinc)}
 .rozet{font:600 12px/1 var(--govde);background:var(--kirmizi);color:#fff;border-radius:10px;padding:4px 8px;min-width:24px}
@@ -91,6 +91,19 @@ input:focus{border-color:var(--pirinc);outline:none}
 .arac{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .arac .bosluk{flex:1}
 .bilgi{font-size:13px;color:var(--yesil);min-height:1em}
+.dugme.genis{width:100%;padding:16px 14px;font:600 15px/1 var(--govde)}
+textarea{resize:vertical;min-height:130px}
+.sayac{font:500 12px/1 var(--kod);color:var(--soluk);text-align:right}
+.oneri{display:flex;flex-direction:column;gap:10px;padding:14px;border-top:1px solid var(--cizgi);background:var(--zemin)}
+.oneri:first-child{border-top:0}
+.oneri.yeni{background:var(--yuzey2);box-shadow:inset 3px 0 0 var(--pirinc)}
+.oneri .om{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.5}
+.oneri .ob{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:var(--soluk);font-variant-numeric:tabular-nums}
+.oneri .ob .ep{font:500 12px/1.3 var(--kod);word-break:break-all;color:var(--pirinc)}
+.oneri .ob .etk{font:600 10px/1 var(--kod);letter-spacing:.12em;text-transform:uppercase;padding:4px 6px;border-radius:3px;background:var(--pirinc);color:var(--pirinc-k)}
+.oneri .arac{gap:6px}
+.oneri .dugme.ikincil{padding:8px 12px;font-size:13px}
+.dugme.tehlike{border-color:var(--kirmizi);color:#ff8b78}
 </style>
 </head>
 <body>
@@ -109,6 +122,7 @@ input:focus{border-color:var(--pirinc);outline:none}
     <h1>Cepheye katıl, haritayı ilk sen fethet.</h1>
     <p class="soluk">CEPHE, Android için büyük strateji oyunu. Kapalı beta sürümünü herkesten önce oynayın.</p>
     <button class="dugme" id="katilDugme" type="button">Kapalı betaya katıl</button>
+    <button class="dugme ikincil genis" id="oneriDugme" type="button">💡 Öneri gönder</button>
   </section>
 
   <!-- ADIM 2 -->
@@ -153,7 +167,24 @@ input:focus{border-color:var(--pirinc);outline:none}
       </div>
     </div>
     <div class="posta" id="kayitPosta"></div>
+    <button class="dugme ikincil genis" id="oneriDugme2" type="button">💡 Öneri gönder</button>
     <div class="alt"><button type="button" id="farkliDugme">Farklı bir adresle kayıt ol</button></div>
+  </section>
+
+  <!-- ÖNERİ -->
+  <section class="kart" id="oneri" hidden>
+    <div class="adim-no">Öneri</div>
+    <h2>Fikrini bizimle paylaş</h2>
+    <p class="soluk">Oyun hakkında öneri, istek ya da hata bildirimi yazabilirsin. Gelen her mesajı okuyoruz.</p>
+    <form class="alan" id="oneriForm" novalidate style="gap:14px">
+      <div class="alan"><label for="oneriMetin">Önerin</label><textarea id="oneriMetin" maxlength="1000" rows="6" placeholder="Örneğin: Haritaya yeni bir bina türü eklensin…"></textarea><div class="sayac" id="oneriSayac">0 / 1000</div></div>
+      <div class="alan"><label for="oneriPosta">E-posta (isteğe bağlı)</label><input type="email" id="oneriPosta" autocomplete="email" inputmode="email" maxlength="120" placeholder="Cevap almak istersen yaz"></div>
+      <div class="hata" id="oneriHata" role="alert"></div>
+      <button class="dugme" id="oneriGonder" type="submit">Öneriyi gönder</button>
+    </form>
+    <div class="durum tamam" id="oneriTamam" role="status" hidden><span class="nokta"></span><div><b>Önerin alındı</b><small>Teşekkürler! Fikrin bize ulaştı.</small></div></div>
+    <button class="dugme ikincil genis" id="oneriYeni" type="button" hidden>Bir öneri daha gönder</button>
+    <div class="alt"><button type="button" id="oneriGeri">← Geri dön</button></div>
   </section>
 
   <!-- YÖNETİCİ GİRİŞ -->
@@ -174,6 +205,7 @@ input:focus{border-color:var(--pirinc);outline:none}
     <div class="sekmeler" role="tablist">
       <button class="sekme on" type="button" id="sekmeYeni" role="tab">Yeni e-postalar <span class="rozet" id="yeniSay">0</span></button>
       <button class="sekme" type="button" id="sekmeTamam" role="tab">Tamamlananlar <span class="rozet sifir" id="tamamSay">0</span></button>
+      <button class="sekme" type="button" id="sekmeOneri" role="tab">Öneriler <span class="rozet sifir" id="oneriSay">0</span></button>
     </div>
 
     <div id="yeniBolum" class="alan" style="gap:12px">
@@ -190,6 +222,11 @@ input:focus{border-color:var(--pirinc);outline:none}
 
     <div id="tamamBolum" class="alan" hidden>
       <div class="liste" id="tamamListe"></div>
+    </div>
+
+    <div id="oneriBolum" class="alan" hidden style="gap:12px">
+      <p class="soluk" style="font-size:13px">Oyunculardan gelen öneriler. Okunmamış olanlar sarı çizgiyle işaretli, en yenisi üstte.</p>
+      <div class="liste" id="oneriListe"><div class="bos">Yükleniyor…</div></div>
     </div>
 
     <form class="alan" id="linkForm" novalidate style="border-top:1px solid var(--cizgi);padding-top:16px">
@@ -259,7 +296,11 @@ input:focus{border-color:var(--pirinc);outline:none}
       cikis: function(){ oturum = false; LS.sil("beta_demo_oturum"); oturumCb && oturumCb(null); return Promise.resolve(); },
       listeIzle: function(durum, cb){ dinle(function(){ var k = oku().kayitlar; cb(Object.keys(k).filter(function(id){ return k[id].durum === durum; }).map(function(id){ return Object.assign({ id:id }, k[id]); })); }); },
       tamamla: function(ids){ var db = oku(); ids.forEach(function(id){ if (db.kayitlar[id]) { db.kayitlar[id].durum = "tamamlandi"; db.kayitlar[id].tamamlanma = Date.now(); } }); yaz(db); return Promise.resolve(); },
-      ayarKaydet: function(link){ var db = oku(); db.ayar.link = link; yaz(db); return Promise.resolve(); }
+      ayarKaydet: function(link){ var db = oku(); db.ayar.link = link; yaz(db); return Promise.resolve(); },
+      oneriGonder: function(metin, eposta){ var db = oku(); db.oneriler = db.oneriler || {}; db.oneriler["o" + Date.now()] = { metin:metin, eposta:eposta, okundu:false, olusturma:Date.now() }; yaz(db); return Promise.resolve(); },
+      oneriIzle: function(cb){ dinle(function(){ var o = oku().oneriler || {}; cb(Object.keys(o).map(function(id){ return Object.assign({ id:id }, o[id]); })); }); },
+      oneriOkundu: function(id, v){ var db = oku(); if (db.oneriler && db.oneriler[id]) db.oneriler[id].okundu = v; yaz(db); return Promise.resolve(); },
+      oneriSil: function(id){ var db = oku(); if (db.oneriler) delete db.oneriler[id]; yaz(db); return Promise.resolve(); }
     };
   }
   function firebaseAPI(){
@@ -289,7 +330,11 @@ input:focus{border-color:var(--pirinc);outline:none}
           return b.commit();
         }));
       },
-      ayarKaydet: function(link){ return ayar.set({ link:link }, { merge:true }); }
+      ayarKaydet: function(link){ return ayar.set({ link:link }, { merge:true }); },
+      oneriGonder: function(metin, eposta){ return fs.collection("oneriler").add({ metin:metin, eposta:eposta, okundu:false, olusturma: firebase.firestore.FieldValue.serverTimestamp() }); },
+      oneriIzle: function(cb, hataCb){ return fs.collection("oneriler").onSnapshot(function(q){ cb(q.docs.map(function(d){ return Object.assign({ id:d.id }, d.data({ serverTimestamps:"estimate" })); })); }, hataCb || function(){}); },
+      oneriOkundu: function(id, v){ return fs.collection("oneriler").doc(id).update({ okundu:v }); },
+      oneriSil: function(id){ return fs.collection("oneriler").doc(id).delete(); }
     };
   }
   function yukleBetik(src){ return new Promise(function(ok, red){ var s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=red; document.head.appendChild(s); }); }
@@ -302,7 +347,7 @@ input:focus{border-color:var(--pirinc);outline:none}
   }
 
   /* ---------- Oyuncu akışı ---------- */
-  var BOLUMLER = ["adim1","adim2","adim3","adminGiris","adminPanel"];
+  var BOLUMLER = ["adim1","adim2","adim3","oneri","adminGiris","adminPanel"];
   function goster(id){ BOLUMLER.forEach(function(b){ $(b).hidden = (b !== id); }); window.scrollTo(0,0); }
 
   var playLink = A.PLAY_LINK || "#";
@@ -341,6 +386,33 @@ input:focus{border-color:var(--pirinc);outline:none}
 
   $("farkliDugme").onclick = function(){ LS.sil("beta_kayit"); izlenen = null; $("eposta").value = ""; goster("adim2"); };
 
+  /* ---------- Öneri ---------- */
+  var oneriDonus = "adim1";
+  function oneriAc(){
+    BOLUMLER.forEach(function(b){ if (!$(b).hidden) oneriDonus = b; });
+    $("oneriForm").hidden = false; $("oneriTamam").hidden = true; $("oneriYeni").hidden = true;
+    $("oneriHata").textContent = "";
+    goster("oneri"); setTimeout(function(){ $("oneriMetin").focus(); }, 50);
+  }
+  $("oneriDugme").onclick = oneriAc;
+  $("oneriDugme2").onclick = oneriAc;
+  $("oneriGeri").onclick = function(){ goster(oneriDonus === "oneri" ? "adim1" : oneriDonus); };
+  $("oneriYeni").onclick = function(){ $("oneriMetin").value = ""; $("oneriSayac").textContent = "0 / 1000"; oneriAc(); };
+  $("oneriMetin").addEventListener("input", function(){ $("oneriSayac").textContent = this.value.length + " / 1000"; });
+  $("oneriForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var m = $("oneriMetin").value.trim(), e = $("oneriPosta").value.trim().toLowerCase();
+    $("oneriHata").textContent = "";
+    if (m.length < 3) { $("oneriHata").textContent = "Lütfen önerini yaz (en az 3 karakter)."; return; }
+    if (e && (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) || e.length > 120)) { $("oneriHata").textContent = "E-posta adresi geçersiz. Boş bırakabilir ya da düzeltebilirsin."; return; }
+    var d = $("oneriGonder"); d.disabled = true; d.textContent = "Gönderiliyor…";
+    API.oneriGonder(m.slice(0,1000), e).then(function(){
+      $("oneriForm").hidden = true; $("oneriTamam").hidden = false; $("oneriYeni").hidden = false;
+      $("oneriMetin").value = ""; $("oneriSayac").textContent = "0 / 1000";
+    }).catch(function(){ $("oneriHata").textContent = "Gönderilemedi. İnternet bağlantını kontrol edip tekrar dene."; })
+      .then(function(){ d.disabled = false; d.textContent = "Öneriyi gönder"; });
+  });
+
   /* ---------- Yönetici ---------- */
   var yeniler = [], secili = {}, aktifSekme = "yeni", panelKuruldu = false;
   function satir(k, secimli){
@@ -372,8 +444,11 @@ input:focus{border-color:var(--pirinc);outline:none}
     aktifSekme = ad;
     $("sekmeYeni").classList.toggle("on", ad === "yeni");
     $("sekmeTamam").classList.toggle("on", ad === "tamam");
+    $("sekmeOneri").classList.toggle("on", ad === "oneri");
     $("yeniBolum").hidden = ad !== "yeni";
     $("tamamBolum").hidden = ad !== "tamam";
+    $("oneriBolum").hidden = ad !== "oneri";
+    $("linkForm").hidden = ad === "oneri";
   }
   function seciliIdler(){ return yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.id; }); }
   function bilgi(m){ $("panelBilgi").textContent = m; if (m) setTimeout(function(){ if ($("panelBilgi").textContent === m) $("panelBilgi").textContent = ""; }, 4000); }
@@ -386,6 +461,10 @@ input:focus{border-color:var(--pirinc);outline:none}
       d.forEach(function(k){ if (!(k.id in secili)) secili[k.id] = true; });
       yeniler = d; yeniCiz();
     }, hata);
+    API.oneriIzle(function(d){
+      d.sort(function(a,b){ return ms(b.olusturma) - ms(a.olusturma); });
+      sonOneriler = d; oneriCiz(d);
+    }, function(){ $("oneriListe").innerHTML = '<div class="bos">Öneriler okunamadı. Firestore kurallarında öneriler bölümü yayınlanmamış olabilir.</div>'; });
     API.listeIzle("tamamlandi", function(d){
       d.sort(function(a,b){ return ms(b.tamamlanma) - ms(a.tamamlanma); });
       var s = $("tamamSay"); s.textContent = d.length;
@@ -395,6 +474,35 @@ input:focus{border-color:var(--pirinc);outline:none}
 
   $("sekmeYeni").onclick = function(){ sekme("yeni"); };
   $("sekmeTamam").onclick = function(){ sekme("tamam"); };
+  $("sekmeOneri").onclick = function(){ sekme("oneri"); };
+  var silOnay = null;
+  function oneriCiz(d){
+    var kap = $("oneriListe"); kap.textContent = "";
+    var okunmamis = d.filter(function(o){ return !o.okundu; }).length;
+    var s = $("oneriSay"); s.textContent = okunmamis; s.className = "rozet" + (okunmamis ? "" : " sifir");
+    if (!d.length) { var b = document.createElement("div"); b.className = "bos"; b.textContent = "Henüz öneri gelmedi."; kap.appendChild(b); return; }
+    d.forEach(function(o){
+      var el = document.createElement("div"); el.className = "oneri" + (o.okundu ? "" : " yeni");
+      var mt = document.createElement("div"); mt.className = "om"; mt.textContent = o.metin;
+      var ob = document.createElement("div"); ob.className = "ob";
+      if (!o.okundu) { var et = document.createElement("span"); et.className = "etk"; et.textContent = "Yeni"; ob.appendChild(et); }
+      var zm = document.createElement("span"); zm.textContent = zaman(o.olusturma); ob.appendChild(zm);
+      var ep = document.createElement("span"); ep.className = "ep"; ep.textContent = o.eposta || "e-posta yok"; ob.appendChild(ep);
+      var ar = document.createElement("div"); ar.className = "arac";
+      var ok = document.createElement("button"); ok.type = "button"; ok.className = "dugme ikincil";
+      ok.textContent = o.okundu ? "Okunmadı yap" : "Okundu";
+      ok.onclick = function(){ API.oneriOkundu(o.id, !o.okundu).catch(function(){ bilgi("Güncellenemedi."); }); };
+      var sl = document.createElement("button"); sl.type = "button"; sl.className = "dugme ikincil tehlike";
+      sl.textContent = silOnay === o.id ? "Silinsin mi? Evet" : "Sil";
+      sl.onclick = function(){
+        if (silOnay !== o.id) { silOnay = o.id; oneriCiz(sonOneriler); return; }
+        silOnay = null; API.oneriSil(o.id).catch(function(){ bilgi("Silinemedi."); });
+      };
+      ar.appendChild(ok); ar.appendChild(sl);
+      el.appendChild(mt); el.appendChild(ob); el.appendChild(ar); kap.appendChild(el);
+    });
+  }
+  var sonOneriler = [];
   $("hepsiSec").onclick = function(){
     var hepsi = yeniler.every(function(k){ return secili[k.id]; });
     yeniler.forEach(function(k){ secili[k.id] = !hepsi; }); yeniCiz();
