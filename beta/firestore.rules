@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function admin() {
+      return request.auth != null
+        && request.auth.token.email == 'ata.coplay@gmail.com';
+    }
+
+    // Kayıt belgesinin kimliği e-postanın SHA-256 özetidir.
+    // Herkes yalnızca kimliğini bildiği tek kaydı okuyabilir; listeyi sadece yönetici görür.
+    match /kayitlar/{id} {
+      allow get: if true;
+      allow list: if admin();
+      allow create: if request.resource.data.keys().hasOnly(['eposta', 'durum', 'olusturma'])
+        && request.resource.data.eposta is string
+        && request.resource.data.eposta.size() <= 120
+        && request.resource.data.eposta.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && request.resource.data.durum == 'beklemede'
+        && request.resource.data.olusturma == request.time;
+      allow update, delete: if admin();
+    }
+
+    match /ayar/{belge} {
+      allow read: if true;
+      allow write: if admin();
+    }
+  }
+}

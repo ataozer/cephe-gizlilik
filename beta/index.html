@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>CEPHE Kapalı Beta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Düzen: tek sütun "harekât emri" kartı; adımlar sırayla açılır. Koyu, haki-pirinç savaş masası teması. */
+:root{
+  --zemin:#14170f; --yuzey:#1d2117; --yuzey2:#262b1e; --cizgi:#3a4130;
+  --metin:#e6e2d3; --soluk:#9ea38c; --pirinc:#d0a53f; --pirinc-k:#1b1606;
+  --kirmizi:#c8412f; --kirmizi-z:#3a1611; --yesil:#4fa35a; --yesil-z:#15301a;
+  --baslik:"Black Ops One",Impact,"Arial Black",sans-serif;
+  --govde:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --kod:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--zemin);color:var(--metin);font:16px/1.6 var(--govde);min-height:100vh;
+  background-image:linear-gradient(var(--cizgi) 1px,transparent 1px),linear-gradient(90deg,var(--cizgi) 1px,transparent 1px);
+  background-size:48px 48px;background-position:-1px -1px;background-attachment:fixed}
+body::after{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 20%,transparent 0,var(--zemin) 75%);pointer-events:none;z-index:0}
+[hidden]{display:none!important}
+.sar{position:relative;z-index:1;max-width:560px;margin:0 auto;
+  padding-block:calc(env(safe-area-inset-top,0px) + 28px) calc(env(safe-area-inset-bottom,0px) + 40px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:20px}
+.ust{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font:28px/1 var(--baslik);letter-spacing:.08em;color:var(--pirinc)}
+.etiket{font:500 11px/1 var(--kod);letter-spacing:.14em;text-transform:uppercase;color:var(--soluk);
+  border:1px solid var(--cizgi);padding:6px 8px;border-radius:3px;background:var(--yuzey)}
+.kart{background:var(--yuzey);border:1px solid var(--cizgi);border-radius:6px;padding:24px 20px;display:flex;flex-direction:column;gap:16px}
+.adimlar{display:flex;gap:6px}
+.adimlar i{flex:1;height:4px;border-radius:2px;background:var(--cizgi)}
+.adimlar i.on{background:var(--pirinc)}
+.adim-no{font:500 11px/1 var(--kod);letter-spacing:.14em;color:var(--pirinc);text-transform:uppercase}
+h1{font:clamp(30px,8vw,42px)/1.05 var(--baslik);margin:0;letter-spacing:.02em;text-wrap:balance}
+h2{font:22px/1.2 var(--baslik);margin:0;letter-spacing:.03em;text-wrap:balance}
+p{margin:0}
+.metin{display:flex;flex-direction:column;gap:12px;color:var(--metin)}
+.soluk{color:var(--soluk)}
+.imza{font:20px/1 var(--baslik);color:var(--pirinc);letter-spacing:.05em}
+.dugme{appearance:none;border:0;border-radius:4px;background:var(--pirinc);color:var(--pirinc-k);
+  font:16px/1 var(--baslik);letter-spacing:.08em;text-transform:uppercase;padding:18px 20px;cursor:pointer;
+  text-align:center;text-decoration:none;display:block;width:100%;box-shadow:0 3px 0 #8a6b20}
+.dugme:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6b20}
+.dugme:disabled{opacity:.55;cursor:wait}
+.dugme.ikincil{background:transparent;color:var(--metin);border:1px solid var(--cizgi);box-shadow:none;font:600 14px/1 var(--govde);letter-spacing:0;text-transform:none;padding:12px 14px;width:auto}
+.dugme.yesil{background:var(--yesil);color:#08140a;box-shadow:0 3px 0 #2c6333}
+:focus-visible{outline:2px solid var(--pirinc);outline-offset:2px}
+label[for]{font:500 12px/1 var(--kod);letter-spacing:.12em;text-transform:uppercase;color:var(--soluk)}
+input[type=email],input[type=password],input[type=url],input[type=text]{width:100%;font:16px/1.3 var(--govde);color:var(--metin);
+  background:var(--zemin);border:1px solid var(--cizgi);border-radius:4px;padding:14px 12px}
+input:focus{border-color:var(--pirinc);outline:none}
+.alan{display:flex;flex-direction:column;gap:8px}
+.hata{color:#ff8b78;font-size:14px;min-height:1em}
+.durum{border-radius:6px;padding:18px 16px;display:flex;align-items:center;gap:14px;border:2px solid}
+.durum.bekle{background:var(--kirmizi-z);border-color:var(--kirmizi);color:#ffd9d2}
+.durum.tamam{background:var(--yesil-z);border-color:var(--yesil);color:#d8f5dc}
+.durum b{font:20px/1.1 var(--baslik);letter-spacing:.05em;text-transform:uppercase;display:block}
+.durum small{font-size:13px;opacity:.85}
+.nokta{width:14px;height:14px;border-radius:50%;flex:none;background:currentColor}
+.durum.bekle .nokta{background:var(--kirmizi);animation:nabiz 1.6s ease-in-out infinite}
+.durum.tamam .nokta{background:var(--yesil)}
+@keyframes nabiz{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.durum.bekle .nokta{animation:none}}
+.posta{font:500 14px/1.4 var(--kod);word-break:break-all;color:var(--soluk)}
+.alt{font-size:13px;color:var(--soluk);text-align:center}
+.alt button{background:none;border:0;color:var(--soluk);text-decoration:underline;font:inherit;cursor:pointer;padding:4px}
+.demo{font:500 12px/1.4 var(--kod);color:var(--pirinc);border:1px dashed var(--pirinc);padding:8px 10px;border-radius:4px}
+/* Yönetici */
+.sekmeler{display:flex;gap:8px;flex-wrap:wrap}
+.sekme{flex:1;min-width:150px;appearance:none;cursor:pointer;border:1px solid var(--cizgi);background:var(--yuzey2);color:var(--metin);
+  border-radius:4px;padding:12px 10px;font:14px/1.15 var(--baslik);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.sekme.on{border-color:var(--pirinc);color:var(--pirinc)}
+.rozet{font:600 12px/1 var(--govde);background:var(--kirmizi);color:#fff;border-radius:10px;padding:4px 8px;min-width:24px}
+.rozet.sifir{background:var(--cizgi)}
+.liste{display:flex;flex-direction:column;border:1px solid var(--cizgi);border-radius:4px;overflow:hidden}
+.satir{cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px;border-top:1px solid var(--cizgi);background:var(--zemin)}
+.satir:first-child{border-top:0}
+.satir input{width:20px;height:20px;accent-color:var(--pirinc);flex:none}
+.satir .ic{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.satir .ep{font:500 14px/1.3 var(--kod);word-break:break-all}
+.satir .zm{font-size:12px;color:var(--soluk);font-variant-numeric:tabular-nums}
+.bos{padding:22px 12px;text-align:center;color:var(--soluk);background:var(--zemin)}
+.arac{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.arac .bosluk{flex:1}
+.bilgi{font-size:13px;color:var(--yesil);min-height:1em}
+</style>
+</head>
+<body>
+<main class="sar">
+  <header class="ust">
+    <div class="logo">CEPHE</div>
+    <div class="etiket" id="ustEtiket">Kapalı Beta · Android</div>
+  </header>
+
+  <div class="demo" id="demoUyari" hidden>Deneme modu: Firebase ayarı girilmedi. Kayıtlar yalnızca bu tarayıcıda tutulur.</div>
+
+  <!-- ADIM 1 -->
+  <section class="kart" id="adim1" hidden>
+    <div class="adimlar" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+    <div class="adim-no">Adım 1 / 3</div>
+    <h1>Cepheye katıl, haritayı ilk sen fethet.</h1>
+    <p class="soluk">CEPHE, Android için büyük strateji oyunu. Kapalı beta sürümünü herkesten önce oynayın.</p>
+    <button class="dugme" id="katilDugme" type="button">Kapalı betaya katıl</button>
+  </section>
+
+  <!-- ADIM 2 -->
+  <section class="kart" id="adim2" hidden>
+    <div class="adimlar" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></div>
+    <div class="adim-no">Adım 2 / 3</div>
+    <h2>Merhaba, ilginiz için teşekkürler 🙏</h2>
+    <div class="metin">
+      <p>CEPHE şu an Google Play'de kapalı betada, bu yüzden aramada görünmüyor.</p>
+      <p>Katılmak için Play Store'da kullandığınız Gmail adresini yazmanız yeterli. Sizi test listesine ekleyip Google Play bağlantısını göndeririz, oyunu oradan normal şekilde kurarsınız.</p>
+      <p>Adresiniz yalnızca test listesi için kullanılır, kimseyle paylaşılmaz. Şifre ya da başka bilgi istemiyoruz. Katılım ücretsiz, şimdilik yalnızca Android.</p>
+      <p class="imza">AtaCoplay</p>
+    </div>
+    <form class="alan" id="postaForm" novalidate>
+      <label for="eposta">Gmail adresiniz</label>
+      <input type="email" id="eposta" autocomplete="email" inputmode="email" placeholder="ornek@gmail.com" maxlength="120" required>
+      <div class="hata" id="postaHata" role="alert"></div>
+      <button class="dugme" id="gonderDugme" type="submit">Gönder</button>
+    </form>
+  </section>
+
+  <!-- ADIM 3 -->
+  <section class="kart" id="adim3" hidden>
+    <div class="adimlar" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+    <div class="adim-no">Adım 3 / 3</div>
+    <h2>Tahmini 1 saat içerisinde kapalı betaya erişim sağlayacaksınız</h2>
+    <div class="metin">
+      <p>Bu bir test sürümüdür; oyunun tam sürümü henüz yayınlanmamıştır. Karşılaşabileceğiniz hata ve eksikleri lütfen bunu göz önünde bulundurarak değerlendirin.</p>
+      <p>Görüşleriniz bizim için çok değerli. Oyunun gelişimine katkıda bulunmak isterseniz fikir ve önerilerinizi <span class="posta" style="color:var(--pirinc)">ata.coplay@gmail.com</span> adresine iletebilirsiniz.</p>
+      <p>İlginiz için teşekkür ederiz.</p>
+      <p class="imza">AtaCoplay</p>
+    </div>
+    <div class="durum bekle" id="durumKutu" role="status" aria-live="polite">
+      <span class="nokta"></span>
+      <div><b id="durumBaslik">Kaydınız beklemede</b><small id="durumAlt">Ekleme yapıldığında bu kutu otomatik olarak yeşile döner.</small></div>
+    </div>
+    <div id="tamamAlan" hidden>
+      <div class="metin" style="gap:10px">
+        <p><strong>Link üzerinden indirebilirsiniz.</strong></p>
+        <a class="dugme yesil" id="playLink" href="#" target="_blank" rel="noopener">Google Play'de aç</a>
+        <p class="soluk" style="font-size:13px">Açılan sayfada "Test kullanıcısı ol" düğmesine basın, ardından oyunu Play Store'dan kurun.</p>
+      </div>
+    </div>
+    <div class="posta" id="kayitPosta"></div>
+    <div class="alt"><button type="button" id="farkliDugme">Farklı bir adresle kayıt ol</button></div>
+  </section>
+
+  <!-- YÖNETİCİ GİRİŞ -->
+  <section class="kart" id="adminGiris" hidden>
+    <div class="adim-no">Yönetici</div>
+    <h2>Yönetici girişi</h2>
+    <form class="alan" id="girisForm" novalidate style="gap:14px">
+      <div class="alan"><label for="aEposta">E-posta</label><input type="email" id="aEposta" autocomplete="username"></div>
+      <div class="alan"><label for="aSifre">Şifre</label><input type="password" id="aSifre" autocomplete="current-password"></div>
+      <div class="hata" id="girisHata" role="alert"></div>
+      <button class="dugme" id="girisDugme" type="submit">Giriş yap</button>
+    </form>
+  </section>
+
+  <!-- YÖNETİCİ PANEL -->
+  <section class="kart" id="adminPanel" hidden>
+    <div class="arac"><div class="adim-no">Yönetici paneli</div><span class="bosluk"></span><button class="dugme ikincil" type="button" id="cikisDugme">Çıkış</button></div>
+    <div class="sekmeler" role="tablist">
+      <button class="sekme on" type="button" id="sekmeYeni" role="tab">Yeni e-postalar <span class="rozet" id="yeniSay">0</span></button>
+      <button class="sekme" type="button" id="sekmeTamam" role="tab">Tamamlananlar <span class="rozet sifir" id="tamamSay">0</span></button>
+    </div>
+
+    <div id="yeniBolum" class="alan" style="gap:12px">
+      <div class="arac">
+        <button class="dugme ikincil" type="button" id="hepsiSec">Tümünü seç</button>
+        <button class="dugme ikincil" type="button" id="kopyalaDugme">Seçilenleri kopyala</button>
+      </div>
+      <div class="liste" id="yeniListe"><div class="bos">Yükleniyor…</div></div>
+      <textarea id="kopyaAlan" readonly hidden style="width:100%;min-height:80px;background:var(--zemin);color:var(--metin);border:1px solid var(--cizgi);border-radius:4px;padding:10px;font:13px/1.4 var(--kod)"></textarea>
+      <div class="bilgi" id="panelBilgi" role="status"></div>
+      <button class="dugme yesil" type="button" id="tamamlaDugme">Kayıtlar tamamlandı</button>
+      <p class="soluk" style="font-size:13px">Önce seçili adresleri kopyalayıp Play Console'daki test listesine ekleyin, sonra bu düğmeye basın. Seçili oyuncuların ekranı yeşile döner.</p>
+    </div>
+
+    <div id="tamamBolum" class="alan" hidden>
+      <div class="liste" id="tamamListe"></div>
+    </div>
+
+    <form class="alan" id="linkForm" novalidate style="border-top:1px solid var(--cizgi);padding-top:16px">
+      <label for="linkGir">Oyunculara gösterilecek indirme bağlantısı</label>
+      <input type="url" id="linkGir" inputmode="url">
+      <button class="dugme ikincil" type="submit" style="align-self:flex-start">Bağlantıyı kaydet</button>
+    </form>
+  </section>
+
+  <footer class="alt">© AtaCoplay · CEPHE</footer>
+</main>
+
+<script src="ayar.js"></script>
+<script>
+(function(){
+  "use strict";
+  var A = window.BETA_AYAR || {};
+  var F = A.FIREBASE || {};
+  var DEMO = !(F.apiKey && F.projectId);
+  var $ = function(id){ return document.getElementById(id); };
+  var LS = {
+    al: function(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    koy: function(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+    sil: function(k){ try { localStorage.removeItem(k); } catch(e){} }
+  };
+
+  function ozet(metin){
+    var veri = new TextEncoder().encode(metin);
+    if (window.crypto && crypto.subtle) {
+      return crypto.subtle.digest("SHA-256", veri).then(function(b){
+        return Array.prototype.map.call(new Uint8Array(b), function(x){ return ("0"+x.toString(16)).slice(-2); }).join("");
+      });
+    }
+    // crypto.subtle yoksa (http) basit yedek
+    var h1 = 0x811c9dc5, h2 = 5381;
+    for (var i=0;i<veri.length;i++){ h1 = Math.imul(h1 ^ veri[i], 16777619) >>> 0; h2 = (Math.imul(h2,33) + veri[i]) >>> 0; }
+    return Promise.resolve("x" + h1.toString(16) + h2.toString(16));
+  }
+
+  function zaman(t){
+    if (!t) return "";
+    var d = typeof t === "number" ? new Date(t) : (t.toDate ? t.toDate() : new Date(t));
+    return d.toLocaleString("tr-TR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit", timeZone:"Europe/Istanbul" });
+  }
+  function ms(t){ return !t ? 0 : typeof t === "number" ? t : (t.toMillis ? t.toMillis() : +new Date(t)); }
+
+  /* ---------- Arka uç: Firebase ya da deneme (localStorage) ---------- */
+  var API;
+  function demoAPI(){
+    var K = "beta_demo_db";
+    function oku(){ try { return JSON.parse(LS.al(K)) || { kayitlar:{}, ayar:{} }; } catch(e){ return { kayitlar:{}, ayar:{} }; } }
+    function yaz(db){ LS.koy(K, JSON.stringify(db)); dinleyiciler.forEach(function(f){ f(); }); }
+    var dinleyiciler = [];
+    function dinle(f){ dinleyiciler.push(f); f(); window.addEventListener("storage", f); setInterval(f, 3000); }
+    var oturum = LS.al("beta_demo_oturum") === "1";
+    var oturumCb = null;
+    return {
+      kayitGetir: function(id){ return Promise.resolve(oku().kayitlar[id] || null); },
+      kayitOlustur: function(id, eposta){ var db = oku(); db.kayitlar[id] = { eposta:eposta, durum:"beklemede", olusturma:Date.now() }; yaz(db); return Promise.resolve(); },
+      izle: function(id, cb){ dinle(function(){ cb(oku().kayitlar[id] || null); }); },
+      ayarIzle: function(cb){ dinle(function(){ cb(oku().ayar); }); },
+      oturumIzle: function(cb){ oturumCb = cb; cb(oturum ? { email: A.ADMIN_EPOSTA } : null); },
+      giris: function(e, s){
+        if (s !== "demo") return Promise.reject({ code:"auth/wrong-password" });
+        oturum = true; LS.koy("beta_demo_oturum","1"); oturumCb && oturumCb({ email:e }); return Promise.resolve();
+      },
+      cikis: function(){ oturum = false; LS.sil("beta_demo_oturum"); oturumCb && oturumCb(null); return Promise.resolve(); },
+      listeIzle: function(durum, cb){ dinle(function(){ var k = oku().kayitlar; cb(Object.keys(k).filter(function(id){ return k[id].durum === durum; }).map(function(id){ return Object.assign({ id:id }, k[id]); })); }); },
+      tamamla: function(ids){ var db = oku(); ids.forEach(function(id){ if (db.kayitlar[id]) { db.kayitlar[id].durum = "tamamlandi"; db.kayitlar[id].tamamlanma = Date.now(); } }); yaz(db); return Promise.resolve(); },
+      ayarKaydet: function(link){ var db = oku(); db.ayar.link = link; yaz(db); return Promise.resolve(); }
+    };
+  }
+  function firebaseAPI(){
+    firebase.initializeApp(F);
+    var fs = firebase.firestore(), auth = firebase.auth();
+    var kayit = function(id){ return fs.collection("kayitlar").doc(id); };
+    var ayar = fs.collection("ayar").doc("genel");
+    return {
+      kayitGetir: function(id){ return kayit(id).get().then(function(s){ return s.exists ? s.data() : null; }); },
+      kayitOlustur: function(id, eposta){ return kayit(id).set({ eposta:eposta, durum:"beklemede", olusturma: firebase.firestore.FieldValue.serverTimestamp() }); },
+      izle: function(id, cb){ kayit(id).onSnapshot(function(s){ cb(s.exists ? s.data() : null); }, function(){}); },
+      ayarIzle: function(cb){ ayar.onSnapshot(function(s){ cb(s.exists ? s.data() : {}); }, function(){ cb({}); }); },
+      oturumIzle: function(cb){ auth.onAuthStateChanged(cb); },
+      giris: function(e, s){ return auth.signInWithEmailAndPassword(e, s); },
+      cikis: function(){ return auth.signOut(); },
+      listeIzle: function(durum, cb, hataCb){
+        return fs.collection("kayitlar").where("durum","==",durum).onSnapshot(function(q){
+          cb(q.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); }));
+        }, hataCb || function(){});
+      },
+      tamamla: function(ids){
+        var parcalar = [];
+        for (var i=0;i<ids.length;i+=400) parcalar.push(ids.slice(i,i+400));
+        return Promise.all(parcalar.map(function(p){
+          var b = fs.batch();
+          p.forEach(function(id){ b.update(kayit(id), { durum:"tamamlandi", tamamlanma: firebase.firestore.FieldValue.serverTimestamp() }); });
+          return b.commit();
+        }));
+      },
+      ayarKaydet: function(link){ return ayar.set({ link:link }, { merge:true }); }
+    };
+  }
+  function yukleBetik(src){ return new Promise(function(ok, red){ var s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=red; document.head.appendChild(s); }); }
+  function hazirla(){
+    if (DEMO) { API = demoAPI(); $("demoUyari").hidden = false; return Promise.resolve(); }
+    var v = "https://www.gstatic.com/firebasejs/10.14.1/";
+    return yukleBetik(v+"firebase-app-compat.js")
+      .then(function(){ return Promise.all([yukleBetik(v+"firebase-auth-compat.js"), yukleBetik(v+"firebase-firestore-compat.js")]); })
+      .then(function(){ API = firebaseAPI(); });
+  }
+
+  /* ---------- Oyuncu akışı ---------- */
+  var BOLUMLER = ["adim1","adim2","adim3","adminGiris","adminPanel"];
+  function goster(id){ BOLUMLER.forEach(function(b){ $(b).hidden = (b !== id); }); window.scrollTo(0,0); }
+
+  var playLink = A.PLAY_LINK || "#";
+  function linkGuncelle(){ $("playLink").href = playLink; }
+
+  var izlenen = null;
+  function durumGoster(k){
+    var tamam = k && k.durum === "tamamlandi";
+    $("durumKutu").className = "durum " + (tamam ? "tamam" : "bekle");
+    $("durumBaslik").textContent = tamam ? "Kaydınız tamamlandı" : "Kaydınız beklemede";
+    $("durumAlt").textContent = tamam ? "Test listesine eklendiniz." : "Ekleme yapıldığında bu kutu otomatik olarak yeşile döner.";
+    $("tamamAlan").hidden = !tamam;
+  }
+  function kayitAc(id, eposta){
+    goster("adim3");
+    $("kayitPosta").textContent = eposta ? "Kayıtlı adres: " + eposta : "";
+    durumGoster(null);
+    if (izlenen !== id) { izlenen = id; API.izle(id, function(k){ if (izlenen === id) durumGoster(k); }); }
+  }
+
+  $("katilDugme").onclick = function(){ goster("adim2"); setTimeout(function(){ $("eposta").focus(); }, 50); };
+
+  $("postaForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var e = $("eposta").value.trim().toLowerCase();
+    $("postaHata").textContent = "";
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) || e.length > 120) { $("postaHata").textContent = "Geçerli bir e-posta adresi yazın (ör. ornek@gmail.com)."; return; }
+    var d = $("gonderDugme"); d.disabled = true; d.textContent = "Gönderiliyor…";
+    var id;
+    ozet(e).then(function(h){ id = h; return API.kayitGetir(id); })
+      .then(function(var_){ return var_ ? null : API.kayitOlustur(id, e); })
+      .then(function(){ LS.koy("beta_kayit", JSON.stringify({ id:id, eposta:e })); kayitAc(id, e); })
+      .catch(function(){ $("postaHata").textContent = "Gönderilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin."; })
+      .then(function(){ d.disabled = false; d.textContent = "Gönder"; });
+  });
+
+  $("farkliDugme").onclick = function(){ LS.sil("beta_kayit"); izlenen = null; $("eposta").value = ""; goster("adim2"); };
+
+  /* ---------- Yönetici ---------- */
+  var yeniler = [], secili = {}, aktifSekme = "yeni", panelKuruldu = false;
+  function satir(k, secimli){
+    var el = document.createElement(secimli ? "label" : "div");
+    el.className = "satir";
+    if (secimli) {
+      var c = document.createElement("input"); c.type = "checkbox"; c.checked = !!secili[k.id];
+      c.onchange = function(){ secili[k.id] = c.checked; };
+      el.appendChild(c);
+    }
+    var ic = document.createElement("div"); ic.className = "ic";
+    var ep = document.createElement("span"); ep.className = "ep"; ep.textContent = k.eposta;
+    var zm = document.createElement("span"); zm.className = "zm";
+    zm.textContent = secimli ? "Başvuru: " + zaman(k.olusturma) : "Tamamlandı: " + zaman(k.tamamlanma);
+    ic.appendChild(ep); ic.appendChild(zm); el.appendChild(ic);
+    return el;
+  }
+  function liste(kap, dizi, secimli, bosMetin){
+    kap.textContent = "";
+    if (!dizi.length) { var b = document.createElement("div"); b.className = "bos"; b.textContent = bosMetin; kap.appendChild(b); return; }
+    dizi.forEach(function(k){ kap.appendChild(satir(k, secimli)); });
+  }
+  function yeniCiz(){
+    var say = $("yeniSay"); say.textContent = yeniler.length; say.className = "rozet" + (yeniler.length ? "" : " sifir");
+    liste($("yeniListe"), yeniler, true, "Bekleyen yeni e-posta yok.");
+    $("tamamlaDugme").disabled = !yeniler.length;
+  }
+  function sekme(ad){
+    aktifSekme = ad;
+    $("sekmeYeni").classList.toggle("on", ad === "yeni");
+    $("sekmeTamam").classList.toggle("on", ad === "tamam");
+    $("yeniBolum").hidden = ad !== "yeni";
+    $("tamamBolum").hidden = ad !== "tamam";
+  }
+  function seciliIdler(){ return yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.id; }); }
+  function bilgi(m){ $("panelBilgi").textContent = m; if (m) setTimeout(function(){ if ($("panelBilgi").textContent === m) $("panelBilgi").textContent = ""; }, 4000); }
+
+  function panelKur(){
+    if (panelKuruldu) return; panelKuruldu = true;
+    var hata = function(){ $("yeniListe").innerHTML = '<div class="bos">Liste okunamadı. Bu hesap yönetici olarak tanımlı değil ya da kurallar yayınlanmadı.</div>'; };
+    API.listeIzle("beklemede", function(d){
+      d.sort(function(a,b){ return ms(a.olusturma) - ms(b.olusturma); });
+      d.forEach(function(k){ if (!(k.id in secili)) secili[k.id] = true; });
+      yeniler = d; yeniCiz();
+    }, hata);
+    API.listeIzle("tamamlandi", function(d){
+      d.sort(function(a,b){ return ms(b.tamamlanma) - ms(a.tamamlanma); });
+      var s = $("tamamSay"); s.textContent = d.length;
+      liste($("tamamListe"), d, false, "Henüz tamamlanan kayıt yok.");
+    });
+  }
+
+  $("sekmeYeni").onclick = function(){ sekme("yeni"); };
+  $("sekmeTamam").onclick = function(){ sekme("tamam"); };
+  $("hepsiSec").onclick = function(){
+    var hepsi = yeniler.every(function(k){ return secili[k.id]; });
+    yeniler.forEach(function(k){ secili[k.id] = !hepsi; }); yeniCiz();
+  };
+  $("kopyalaDugme").onclick = function(){
+    var metin = yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.eposta; }).join(", ");
+    if (!metin) { bilgi("Önce en az bir adres seçin."); return; }
+    var alan = $("kopyaAlan"); alan.value = metin;
+    var p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(metin) : Promise.reject();
+    p.then(function(){ alan.hidden = true; bilgi("Adresler kopyalandı. Play Console test listesine yapıştırabilirsiniz."); })
+     .catch(function(){ alan.hidden = false; alan.select(); bilgi("Otomatik kopyalanamadı; kutudaki metni seçip kopyalayın."); });
+  };
+  $("tamamlaDugme").onclick = function(){
+    var ids = seciliIdler();
+    if (!ids.length) { bilgi("Önce en az bir adres seçin."); return; }
+    var d = this; d.disabled = true; d.textContent = "Kaydediliyor…";
+    API.tamamla(ids).then(function(){
+      ids.forEach(function(id){ delete secili[id]; });
+      bilgi(ids.length + " kayıt tamamlandı olarak işaretlendi.");
+    }).catch(function(){ bilgi("Kaydedilemedi, tekrar deneyin."); })
+      .then(function(){ d.disabled = false; d.textContent = "Kayıtlar tamamlandı"; yeniCiz(); });
+  };
+  $("linkForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var l = $("linkGir").value.trim();
+    if (!/^https:\/\//.test(l)) { bilgi("Bağlantı https:// ile başlamalı."); return; }
+    API.ayarKaydet(l).then(function(){ bilgi("Bağlantı kaydedildi."); }).catch(function(){ bilgi("Bağlantı kaydedilemedi."); });
+  });
+  $("girisForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    $("girisHata").textContent = "";
+    var d = $("girisDugme"); d.disabled = true;
+    API.giris($("aEposta").value.trim(), $("aSifre").value)
+      .catch(function(){ $("girisHata").textContent = "E-posta ya da şifre hatalı."; })
+      .then(function(){ d.disabled = false; $("aSifre").value = ""; });
+  });
+  $("cikisDugme").onclick = function(){ API.cikis(); };
+
+  /* ---------- Yönlendirme ---------- */
+  var oturum = null;
+  function yonlendir(){
+    var admin = location.hash === "#admin";
+    $("ustEtiket").textContent = admin ? "Yönetim" : "Kapalı Beta · Android";
+    if (admin) {
+      if (oturum) { goster("adminPanel"); panelKur(); sekme(aktifSekme); }
+      else goster("adminGiris");
+      return;
+    }
+    var k = null; try { k = JSON.parse(LS.al("beta_kayit")); } catch(e){}
+    if (k && k.id) kayitAc(k.id, k.eposta); else if ($("adim2").hidden && $("adim3").hidden) goster("adim1");
+    else if (!$("adminGiris").hidden || !$("adminPanel").hidden) goster("adim1");
+  }
+
+  linkGuncelle();
+  hazirla().then(function(){
+    API.ayarIzle(function(a){ if (a && a.link) { playLink = a.link; linkGuncelle(); } if (!$("linkGir").value) $("linkGir").value = playLink; });
+    API.oturumIzle(function(u){ oturum = u; yonlendir(); });
+    window.addEventListener("hashchange", yonlendir);
+    yonlendir();
+  }).catch(function(){
+    goster("adim1");
+    $("katilDugme").disabled = true;
+    $("katilDugme").textContent = "Bağlantı kurulamadı, sayfayı yenileyin";
+  });
+})();
+</script>
+</body>
+</html>
