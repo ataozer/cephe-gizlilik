@@ -34,6 +34,11 @@ service cloud.firestore {
         && request.resource.data.olusturma == request.time;
     }
 
+    // Yönetici listesi (elle girilen e-postalar): yalnızca yönetici okur ve yazar.
+    match /yonetim/{belge} {
+      allow read, write: if admin();
+    }
+
     match /ayar/{belge} {
       allow read: if true;
       allow write: if admin();
