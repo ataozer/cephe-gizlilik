@@ -230,7 +230,7 @@ textarea{resize:vertical;min-height:130px}
       <div class="esle">
         <div class="arac"><label for="elleGir">Elle girdiğim e-postalar</label><span class="bosluk"></span><span class="esle-ozet" id="elleSay">0 adres</span></div>
         <textarea id="elleGir" rows="4" placeholder="Play Console test listendeki adresleri yapıştır: virgülle, boşlukla ya da alt alta"></textarea>
-        <div class="esle-ozet" id="esleOzet">Yazdığın adresler bekleyenlerle otomatik eşleşir. Onayladığın adresler bu listeye kendiliğinden eklenir.</div>
+        <div class="esle-ozet" id="esleOzet">Yazdığın adresler bekleyenlerle otomatik eşleşir.</div>
         <div class="esle-ozet" id="elleDurum"></div>
         <button class="dugme ikincil genis" type="button" id="esleDugme">Eşleşen mailler (0)</button>
         <div id="eslePanel" class="alan" hidden style="gap:10px">
@@ -240,10 +240,16 @@ textarea{resize:vertical;min-height:130px}
         <button class="dugme yesil" type="button" id="onaylaDugme" hidden>Eşleşenlerin kaydını tamamla (0)</button>
         <button class="dugme ikincil genis" type="button" id="benzersizDugme">Yeni benzersiz e-postalar (0)</button>
         <div id="benzersizPanel" class="alan" hidden style="gap:10px">
-          <p class="soluk" style="font-size:13px">Bekleyenlerden listende olmayanlar. Kopyalayıp Play Console'a ekle, sonra kayıtları tamamla; adresler listene de eklenir.</p>
+          <p class="soluk" style="font-size:13px">Bekleyenlerden listende olmayanlar. Kopyalayıp Play Console'a ekle, sonra kayıtları tamamla.</p>
           <div class="liste" id="benzersizListe"></div>
           <button class="dugme ikincil genis" type="button" id="benzersizKopyala">Bu adresleri kopyala</button>
           <button class="dugme yesil" type="button" id="benzersizTamamla">Kayıtları tamamla</button>
+        </div>
+        <div id="tasiAlan" class="alan" hidden style="gap:10px;border-top:1px solid var(--cizgi);padding-top:12px">
+          <div class="arac"><label>Tamamlanan yeni e-postalar</label><span class="bosluk"></span><span class="esle-ozet" id="tasiSay">0 adres</span></div>
+          <p class="soluk" style="font-size:13px">Kaydı tamamlanan ama henüz listende olmayan adresler. Play Console'a eklediysen listene taşı.</p>
+          <div class="liste" id="tasiListe"></div>
+          <button class="dugme genis" type="button" id="tasiDugme">Elle girdiğim e-postalar listesine taşı</button>
         </div>
       </div>
       <div class="arac">
@@ -576,7 +582,7 @@ textarea{resize:vertical;min-height:130px}
   };
 
   /* ---------- Elle girilen adreslerle eşleştirme ---------- */
-  var esleSet = {}, esleler = [], tamamlar = [], benzersiz = [];
+  var esleSet = {}, esleler = [], tamamlar = [], benzersiz = [], tasinacak = [];
   var elleHazir = false, tamamHazir = false, elleUzak = true, elleKayitZaman = null, sonGonderilen = null;
   try { $("elleGir").value = LS.al("beta_elle") || ""; } catch(e){}
   function elleKaydet(hemen){
@@ -610,10 +616,6 @@ textarea{resize:vertical;min-height:130px}
     return g;
   }
   function esleHesapla(){
-    if (elleHazir && tamamHazir) {
-      var eklenen = elleEkle(tamamlar.map(function(k){ return k.eposta; }));
-      if (eklenen) bilgi(eklenen + " onaylı adres elle girdiğin listeye eklendi.");
-    }
     var g = elleAdresler(), eski = esleSet;
     esleSet = {};
     esleler = yeniler.filter(function(k){ return g[(k.eposta || "").toLowerCase()]; });
@@ -627,11 +629,15 @@ textarea{resize:vertical;min-height:130px}
     $("elleSay").textContent = hepsi.length + " adres";
     $("esleOzet").textContent = hepsi.length
       ? esleler.length + " eşleşti · " + benzersiz.length + " yeni benzersiz" + (zaten.length ? " · " + zaten.length + " onaylı" : "") + (yok.length ? " · " + yok.length + " sitede kaydı yok" : "")
-      : "Yazdığın adresler bekleyenlerle otomatik eşleşir. Onayladığın adresler bu listeye kendiliğinden eklenir.";
+      : "Yazdığın adresler bekleyenlerle otomatik eşleşir.";
     $("benzersizDugme").textContent = "Yeni benzersiz e-postalar (" + benzersiz.length + ")";
     liste($("benzersizListe"), benzersiz, false, "Yeni benzersiz adres yok.");
     Array.prototype.forEach.call($("benzersizListe").querySelectorAll(".zm"), function(z, i){ if (benzersiz[i]) z.textContent = "Başvuru: " + zaman(benzersiz[i].olusturma); });
     $("benzersizTamamla").disabled = !benzersiz.length;
+    tasinacak = tamamHazir ? tamamlar.filter(function(k){ return !g[(k.eposta || "").toLowerCase()]; }) : [];
+    $("tasiAlan").hidden = !tasinacak.length;
+    $("tasiSay").textContent = tasinacak.length + " adres";
+    liste($("tasiListe"), tasinacak, false, "Taşınacak adres yok.");
     $("esleDugme").textContent = "Eşleşen mailler (" + esleler.length + ")";
     liste($("esleListe"), esleler, false, "Eşleşen bekleyen adres yok.");
     Array.prototype.forEach.call($("esleListe").querySelectorAll(".zm"), function(z, i){ if (esleler[i]) z.textContent = "Başvuru: " + zaman(esleler[i].olusturma); });
@@ -647,6 +653,11 @@ textarea{resize:vertical;min-height:130px}
     elleKaydet(false);
     clearTimeout(esleZaman); esleZaman = setTimeout(esleHesapla, 250);
   });
+  $("tasiDugme").onclick = function(){
+    var n = elleEkle(tasinacak.map(function(k){ return k.eposta; }));
+    bilgi(n ? n + " adres elle girdiğin listeye taşındı." : "Taşınacak adres yok.");
+    esleHesapla();
+  };
   $("benzersizDugme").onclick = function(){ $("benzersizPanel").hidden = !$("benzersizPanel").hidden; };
   $("benzersizKopyala").onclick = function(){
     var metin = benzersiz.map(function(k){ return k.eposta; }).join(", ");
@@ -661,8 +672,7 @@ textarea{resize:vertical;min-height:130px}
     if (!ids.length) { bilgi("Tamamlanacak adres yok."); return; }
     var d = this; d.disabled = true; d.textContent = "Tamamlanıyor…";
     API.tamamla(ids).then(function(){
-      elleEkle(hedef.map(function(k){ return k.eposta; }));
-      bilgi(ids.length + " kayıt tamamlandı ve listene eklendi.");
+      bilgi(ids.length + " kayıt tamamlandı. Aşağıdaki kutudan listene taşıyabilirsin.");
       $("benzersizPanel").hidden = true;
     }).catch(function(){ bilgi("Tamamlanamadı, tekrar deneyin."); })
       .then(function(){ d.textContent = "Kayıtları tamamla"; esleHesapla(); });
