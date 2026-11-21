@@ -21,6 +21,19 @@ service cloud.firestore {
       allow update, delete: if admin();
     }
 
+    // Öneriler: herkes yalnızca yeni öneri ekleyebilir; okumayı, işaretlemeyi ve silmeyi yalnızca yönetici yapar.
+    match /oneriler/{id} {
+      allow read, update, delete: if admin();
+      allow create: if request.resource.data.keys().hasOnly(['metin', 'eposta', 'okundu', 'olusturma'])
+        && request.resource.data.metin is string
+        && request.resource.data.metin.size() >= 3
+        && request.resource.data.metin.size() <= 1000
+        && request.resource.data.eposta is string
+        && request.resource.data.eposta.size() <= 120
+        && request.resource.data.okundu == false
+        && request.resource.data.olusturma == request.time;
+    }
+
     match /ayar/{belge} {
       allow read: if true;
       allow write: if admin();
