@@ -117,7 +117,7 @@ textarea{resize:vertical;min-height:130px}
 .dugme.tehlike{border-color:var(--kirmizi);color:#ff8b78}
 .esle{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px dashed var(--cizgi);border-radius:4px;background:var(--yuzey2)}
 .esle textarea{min-height:96px;font:13px/1.45 var(--kod)}
-.satir.esl{background:var(--yesil-z);cursor:default}
+.satir.esl{background:var(--yesil-z)}
 .satir.esl .ep{color:#d8f5dc}
 .etk.esl{font:600 10px/1 var(--kod);letter-spacing:.12em;padding:4px 6px;border-radius:3px;background:var(--yesil);color:#08140a;align-self:flex-start}
 .esle-ozet{font-size:13px;color:var(--soluk);font-variant-numeric:tabular-nums}
@@ -236,8 +236,8 @@ textarea{resize:vertical;min-height:130px}
         <div id="eslePanel" class="alan" hidden style="gap:10px">
           <div class="liste" id="esleListe"></div>
           <div class="esle-yok" id="esleYok"></div>
-          <button class="dugme yesil" type="button" id="onaylaDugme">Kaydı onayla</button>
         </div>
+        <button class="dugme yesil" type="button" id="onaylaDugme" hidden>Eşleşenlerin kaydını tamamla (0)</button>
         <button class="dugme ikincil genis" type="button" id="benzersizDugme">Yeni benzersiz e-postalar (0)</button>
         <div id="benzersizPanel" class="alan" hidden style="gap:10px">
           <p class="soluk" style="font-size:13px">Bekleyenlerden listende olmayanlar. Kopyalayıp Play Console'a ekle, sonra kayıtları tamamla; adresler listene de eklenir.</p>
@@ -253,8 +253,8 @@ textarea{resize:vertical;min-height:130px}
       <div class="liste" id="yeniListe"><div class="bos">Yükleniyor…</div></div>
       <textarea id="kopyaAlan" readonly hidden style="width:100%;min-height:80px;background:var(--zemin);color:var(--metin);border:1px solid var(--cizgi);border-radius:4px;padding:10px;font:13px/1.4 var(--kod)"></textarea>
       <div class="bilgi" id="panelBilgi" role="status"></div>
-      <button class="dugme yesil" type="button" id="tamamlaDugme">Kayıtlar tamamlandı</button>
-      <p class="soluk" style="font-size:13px">Önce seçili adresleri kopyalayıp Play Console'daki test listesine ekleyin, sonra bu düğmeye basın. Seçili oyuncuların ekranı yeşile döner.</p>
+      <button class="dugme yesil" type="button" id="tamamlaDugme">Kayıtlar tamamlandı (0)</button>
+      <p class="soluk" style="font-size:13px">Seçili adreslerin (eşleşenler dahil) kaydı tamamlanır ve oyuncuların ekranı yeşile döner. "Seçilenleri kopyala" eşleşenleri atlar, çünkü onlar zaten Play Console listende.</p>
     </div>
 
     <div id="tamamBolum" class="alan" hidden>
@@ -461,8 +461,8 @@ textarea{resize:vertical;min-height:130px}
     var el = document.createElement(secimli ? "label" : "div");
     el.className = "satir" + (es ? " esl" : "");
     if (secimli) {
-      var c = document.createElement("input"); c.type = "checkbox"; c.checked = !es && !!secili[k.id]; c.disabled = !!es;
-      c.onchange = function(){ secili[k.id] = c.checked; };
+      var c = document.createElement("input"); c.type = "checkbox"; c.checked = !!secili[k.id];
+      c.onchange = function(){ secili[k.id] = c.checked; tamamSayGuncelle(); };
       el.appendChild(c);
     }
     var ic = document.createElement("div"); ic.className = "ic";
@@ -482,7 +482,7 @@ textarea{resize:vertical;min-height:130px}
   function yeniCiz(){
     var say = $("yeniSay"); say.textContent = yeniler.length; say.className = "rozet" + (yeniler.length ? "" : " sifir");
     liste($("yeniListe"), yeniler, true, "Bekleyen yeni e-posta yok.");
-    $("tamamlaDugme").disabled = !yeniler.length;
+    tamamSayGuncelle();
   }
   function sekme(ad){
     aktifSekme = ad;
@@ -493,6 +493,11 @@ textarea{resize:vertical;min-height:130px}
     $("tamamBolum").hidden = ad !== "tamam";
     $("oneriBolum").hidden = ad !== "oneri";
     $("linkForm").hidden = ad === "oneri";
+  }
+  function tamamSayGuncelle(){
+    var n = seciliIdler().length, d = $("tamamlaDugme");
+    if (d.textContent !== "Kaydediliyor…") d.textContent = "Kayıtlar tamamlandı (" + n + ")";
+    d.disabled = !n;
   }
   function seciliIdler(){ return yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.id; }); }
   function bilgi(m){ $("panelBilgi").textContent = m; if (m) setTimeout(function(){ if ($("panelBilgi").textContent === m) $("panelBilgi").textContent = ""; }, 4000); }
@@ -566,9 +571,8 @@ textarea{resize:vertical;min-height:130px}
   }
   var sonOneriler = [];
   $("hepsiSec").onclick = function(){
-    var acik = yeniler.filter(function(k){ return !esleSet[k.id]; });
-    var hepsi = acik.every(function(k){ return secili[k.id]; });
-    acik.forEach(function(k){ secili[k.id] = !hepsi; }); yeniCiz();
+    var hepsi = yeniler.every(function(k){ return secili[k.id]; });
+    yeniler.forEach(function(k){ secili[k.id] = !hepsi; }); yeniCiz();
   };
 
   /* ---------- Elle girilen adreslerle eşleştirme ---------- */
@@ -613,8 +617,7 @@ textarea{resize:vertical;min-height:130px}
     var g = elleAdresler(), eski = esleSet;
     esleSet = {};
     esleler = yeniler.filter(function(k){ return g[(k.eposta || "").toLowerCase()]; });
-    esleler.forEach(function(k){ esleSet[k.id] = true; secili[k.id] = false; });
-    Object.keys(eski).forEach(function(id){ if (!esleSet[id]) secili[id] = true; });
+    esleler.forEach(function(k){ esleSet[k.id] = true; if (!eski[k.id]) secili[k.id] = true; });
     var bekleyen = {}, tamam = {};
     yeniler.forEach(function(k){ bekleyen[(k.eposta || "").toLowerCase()] = true; });
     tamamlar.forEach(function(k){ tamam[(k.eposta || "").toLowerCase()] = true; });
@@ -633,7 +636,10 @@ textarea{resize:vertical;min-height:130px}
     liste($("esleListe"), esleler, false, "Eşleşen bekleyen adres yok.");
     Array.prototype.forEach.call($("esleListe").querySelectorAll(".zm"), function(z, i){ if (esleler[i]) z.textContent = "Başvuru: " + zaman(esleler[i].olusturma); });
     $("esleYok").textContent = "";
-    $("onaylaDugme").disabled = !esleler.length;
+    var od = $("onaylaDugme");
+    od.hidden = !esleler.length;
+    if (od.textContent !== "Tamamlanıyor…") od.textContent = "Eşleşenlerin kaydını tamamla (" + esleler.length + ")";
+    od.disabled = !esleler.length;
     yeniCiz();
   }
   var esleZaman = null;
@@ -665,16 +671,17 @@ textarea{resize:vertical;min-height:130px}
   $("onaylaDugme").onclick = function(){
     var ids = esleler.map(function(k){ return k.id; });
     if (!ids.length) { bilgi("Eşleşen adres yok."); return; }
-    var d = this; d.disabled = true; d.textContent = "Onaylanıyor…";
+    var d = this; d.disabled = true; d.textContent = "Tamamlanıyor…";
     API.tamamla(ids).then(function(){
-      bilgi(ids.length + " kayıt onaylandı. Oyuncuların ekranı yeşile döndü.");
+      ids.forEach(function(id){ delete secili[id]; });
+      bilgi(ids.length + " eşleşen kaydın tamamlandı. Oyuncuların ekranı yeşile döndü.");
       $("eslePanel").hidden = true;
-    }).catch(function(){ bilgi("Onaylanamadı, tekrar deneyin."); })
-      .then(function(){ d.textContent = "Kaydı onayla"; d.disabled = !esleler.length; });
+    }).catch(function(){ bilgi("Tamamlanamadı, tekrar deneyin."); })
+      .then(function(){ d.textContent = ""; esleHesapla(); });
   };
   $("kopyalaDugme").onclick = function(){
-    var metin = yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.eposta; }).join(", ");
-    if (!metin) { bilgi("Önce en az bir adres seçin."); return; }
+    var metin = yeniler.filter(function(k){ return secili[k.id] && !esleSet[k.id]; }).map(function(k){ return k.eposta; }).join(", ");
+    if (!metin) { bilgi("Kopyalanacak yeni adres yok (eşleşenler zaten listende)."); return; }
     var alan = $("kopyaAlan"); alan.value = metin;
     var p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(metin) : Promise.reject();
     p.then(function(){ alan.hidden = true; bilgi("Adresler kopyalandı. Play Console test listesine yapıştırabilirsiniz."); })
@@ -688,7 +695,7 @@ textarea{resize:vertical;min-height:130px}
       ids.forEach(function(id){ delete secili[id]; });
       bilgi(ids.length + " kayıt tamamlandı olarak işaretlendi.");
     }).catch(function(){ bilgi("Kaydedilemedi, tekrar deneyin."); })
-      .then(function(){ d.disabled = false; d.textContent = "Kayıtlar tamamlandı"; yeniCiz(); });
+      .then(function(){ d.textContent = ""; yeniCiz(); });
   };
   $("linkForm").addEventListener("submit", function(ev){
     ev.preventDefault();
