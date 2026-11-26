@@ -24,14 +24,31 @@ service cloud.firestore {
     // Öneriler: herkes yalnızca yeni öneri ekleyebilir; okumayı, işaretlemeyi ve silmeyi yalnızca yönetici yapar.
     match /oneriler/{id} {
       allow read, update, delete: if admin();
-      allow create: if request.resource.data.keys().hasOnly(['metin', 'eposta', 'okundu', 'olusturma'])
+      allow create: if request.resource.data.keys().hasOnly(['metin', 'eposta', 'okundu', 'olusturma', 'gorsel'])
         && request.resource.data.metin is string
         && request.resource.data.metin.size() >= 3
         && request.resource.data.metin.size() <= 1000
         && request.resource.data.eposta is string
         && request.resource.data.eposta.size() <= 120
         && request.resource.data.okundu == false
-        && request.resource.data.olusturma == request.time;
+        && request.resource.data.olusturma == request.time
+        && (!('gorsel' in request.resource.data)
+            || (request.resource.data.gorsel is int
+                && request.resource.data.gorsel >= 1
+                && request.resource.data.gorsel <= 3));
+
+      // Öneri görselleri (base64 JPEG): yalnızca öneriyle aynı toplu yazmada eklenebilir, en çok 3 tane.
+      // Sonradan var olan bir öneriye görsel eklenemez; okumayı ve silmeyi yalnızca yönetici yapar.
+      match /gorseller/{gid} {
+        allow read, delete: if admin();
+        allow create: if gid in ['0', '1', '2']
+          && !exists(/databases/$(database)/documents/oneriler/$(id))
+          && existsAfter(/databases/$(database)/documents/oneriler/$(id))
+          && request.resource.data.keys().hasOnly(['veri'])
+          && request.resource.data.veri is string
+          && request.resource.data.veri.size() > 100
+          && request.resource.data.veri.size() <= 900000;
+      }
     }
 
     // Yönetici listesi (elle girilen e-postalar): yalnızca yönetici okur ve yazar.

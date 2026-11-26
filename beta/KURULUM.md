@@ -21,3 +21,8 @@ Site `beta-site/` klasöründe. Firebase ayarı girilmezse "deneme modu"nda aç�
 - Yönetici panelinde **Yeni e-postalar** → "Seçilenleri kopyala" → Play Console > Test > Kapalı test > Test kullanıcıları listesine yapıştır.
 - Sonra **Kayıtlar tamamlandı** → oyuncuların ekranı anında yeşile döner ve Google Play bağlantısı görünür.
 - Bağlantı panelin altından değiştirilebilir (varsayılan: `https://play.google.com/apps/testing/co.ata.cephe`).
+
+## Öneri görselleri ve geçersiz e-posta
+- Oyuncu öneriye en çok 3 görsel ekleyebilir. Görseller telefonda küçültülüp (≤1600 px JPEG) Firestore'a, önerinin altındaki `gorseller` bölümüne yazılır. Firebase Storage gerekmez, Spark planında çalışır.
+- Bu özellik için `firestore.rules` güncellendi: Firebase Console → Firestore → Kurallar sekmesine yeni içeriği yapıştırıp **Yayınla**. Kurallar güncellenmezse görselsiz öneriler çalışmaya devam eder, görselli öneriler gönderilemez.
+- Yönetici panelinde **Yeni e-postalar** listesinden adres seçip "Seçilenleri geçersiz işaretle" (iki kez dokun) → oyuncu sarı "Geçersiz e-posta adresi" uyarısı ve "Doğru adresle tekrar kayıt ol" düğmesi görür. **Geçersiz** sekmesinden "Beklemeye al" ile geri alınır.
