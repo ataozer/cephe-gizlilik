@@ -78,6 +78,21 @@ input:focus{border-color:var(--pirinc);outline:none}
 .nokta{width:14px;height:14px;border-radius:50%;flex:none;background:currentColor}
 .durum.bekle .nokta{background:var(--kirmizi);animation:nabiz 1.6s ease-in-out infinite}
 .durum.tamam .nokta{background:var(--yesil)}
+.durum.uyari{background:#352b08;border-color:#e6b422;color:#fff0bf}
+.durum.uyari .nokta{background:#e6b422}
+.gorseller{display:flex;flex-wrap:wrap;gap:8px}
+.kucuk{position:relative;width:84px;height:84px;border-radius:4px;overflow:hidden;border:1px solid var(--cizgi);background:var(--zemin);padding:0;cursor:pointer;flex:none}
+.kucuk img{width:100%;height:100%;object-fit:cover;display:block}
+.kucuk .x{position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;border:0;background:#000c;color:#fff;font:16px/26px var(--govde);cursor:pointer;padding:0}
+.gorsel-not{font-size:12px;color:var(--soluk)}
+#buyuk{position:fixed;inset:0;z-index:20;background:#000e;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#buyuk img{max-width:100%;max-height:100%;object-fit:contain}
+.gsatir{display:flex;align-items:center;gap:12px;padding:12px;border-top:1px solid var(--cizgi);background:var(--zemin)}
+.gsatir:first-child{border-top:0}
+.gsatir .ic{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.gsatir .ep{font:500 14px/1.3 var(--kod);word-break:break-all;color:#ffe08a}
+.gsatir .zm{font-size:12px;color:var(--soluk)}
+.gsatir .dugme.ikincil{padding:8px 10px;font-size:13px;flex:none}
 @keyframes nabiz{50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){.durum.bekle .nokta{animation:none}}
 .posta{font:500 14px/1.4 var(--kod);word-break:break-all;color:var(--soluk)}
@@ -85,7 +100,7 @@ input:focus{border-color:var(--pirinc);outline:none}
 .alt button{background:none;border:0;color:var(--soluk);text-decoration:underline;font:inherit;cursor:pointer;padding:4px}
 .demo{font:500 12px/1.4 var(--kod);color:var(--pirinc);border:1px dashed var(--pirinc);padding:8px 10px;border-radius:4px}
 /* Yönetici */
-.sekmeler{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sekmeler{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .sekme{min-width:0;appearance:none;cursor:pointer;border:1px solid var(--cizgi);background:var(--yuzey2);color:var(--metin);
   border-radius:4px;padding:10px 6px;font:13px/1.15 var(--baslik);letter-spacing:.04em;text-transform:uppercase;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;text-wrap:balance}
@@ -179,6 +194,7 @@ textarea{resize:vertical;min-height:130px}
       <span class="nokta"></span>
       <div><b id="durumBaslik">Kaydınız beklemede</b><small id="durumAlt">Ekleme yapıldığında bu kutu otomatik olarak yeşile döner.</small></div>
     </div>
+    <button class="dugme" id="tekrarDugme" type="button" hidden>Doğru adresle tekrar kayıt ol</button>
     <div id="tamamAlan" hidden>
       <div class="metin" style="gap:10px">
         <p><strong>Link üzerinden indirebilirsiniz.</strong></p>
@@ -198,6 +214,11 @@ textarea{resize:vertical;min-height:130px}
     <p class="soluk">Oyun hakkında öneri, istek ya da hata bildirimi yazabilirsin. Gelen her mesajı okuyoruz.</p>
     <form class="alan" id="oneriForm" novalidate style="gap:14px">
       <div class="alan"><label for="oneriMetin">Önerin</label><textarea id="oneriMetin" maxlength="1000" rows="6" placeholder="Örneğin: Haritaya yeni bir bina türü eklensin…"></textarea><div class="sayac" id="oneriSayac">0 / 1000</div></div>
+      <div class="alan"><label for="oneriGorsel">Görsel (isteğe bağlı, en çok 3)</label>
+        <input type="file" id="oneriGorsel" accept="image/*" multiple hidden>
+        <div class="gorseller" id="gorselOn"></div>
+        <button class="dugme ikincil genis" id="gorselSec" type="button">📷 Görsel ekle</button>
+        <div class="gorsel-not" id="gorselNot">Ekran görüntüsü ya da fotoğraf ekleyebilirsin.</div></div>
       <div class="alan"><label for="oneriPosta">E-posta (isteğe bağlı)</label><input type="email" id="oneriPosta" autocomplete="email" inputmode="email" maxlength="120" placeholder="Cevap almak istersen yaz"></div>
       <div class="hata" id="oneriHata" role="alert"></div>
       <button class="dugme" id="oneriGonder" type="submit">Öneriyi gönder</button>
@@ -226,6 +247,7 @@ textarea{resize:vertical;min-height:130px}
       <button class="sekme on" type="button" id="sekmeYeni" role="tab">Yeni e-postalar <span class="rozet" id="yeniSay">0</span></button>
       <button class="sekme" type="button" id="sekmeTamam" role="tab">Tamamlananlar <span class="rozet sifir" id="tamamSay">0</span></button>
       <button class="sekme" type="button" id="sekmeOneri" role="tab">Öneriler <span class="rozet sifir" id="oneriSay">0</span></button>
+      <button class="sekme" type="button" id="sekmeGecersiz" role="tab">Geçersiz <span class="rozet sifir" id="gecersizSay">0</span></button>
     </div>
 
     <div id="yeniBolum" class="alan" style="gap:12px">
@@ -263,10 +285,17 @@ textarea{resize:vertical;min-height:130px}
       <div class="bilgi" id="panelBilgi" role="status"></div>
       <button class="dugme yesil" type="button" id="tamamlaDugme">Kayıtlar tamamlandı (0)</button>
       <p class="soluk" style="font-size:13px">Seçili adreslerin (eşleşenler dahil) kaydı tamamlanır ve oyuncuların ekranı yeşile döner. "Seçilenleri kopyala" eşleşenleri atlar, çünkü onlar zaten Play Console listende.</p>
+      <button class="dugme ikincil genis tehlike" type="button" id="gecersizDugme">Seçilenleri geçersiz işaretle (0)</button>
+      <p class="soluk" style="font-size:13px">Geçersiz işaretlenen adresin sahibi sarı "Geçersiz e-posta adresi" uyarısı görür ve doğru adresle yeniden kayıt olabilir.</p>
     </div>
 
     <div id="tamamBolum" class="alan" hidden>
       <div class="liste" id="tamamListe"></div>
+    </div>
+
+    <div id="gecersizBolum" class="alan" hidden style="gap:12px">
+      <p class="soluk" style="font-size:13px">Geçersiz işaretlenen adresler. Yanlışlıkla işaretlediysen "Beklemeye al" ile geri alabilirsin.</p>
+      <div class="liste" id="gecersizListe"><div class="bos">Yükleniyor…</div></div>
     </div>
 
     <div id="oneriBolum" class="alan" hidden style="gap:12px">
@@ -342,10 +371,17 @@ textarea{resize:vertical;min-height:130px}
       listeIzle: function(durum, cb){ dinle(function(){ var k = oku().kayitlar; cb(Object.keys(k).filter(function(id){ return k[id].durum === durum; }).map(function(id){ return Object.assign({ id:id }, k[id]); })); }); },
       tamamla: function(ids){ var db = oku(); ids.forEach(function(id){ if (db.kayitlar[id]) { db.kayitlar[id].durum = "tamamlandi"; db.kayitlar[id].tamamlanma = Date.now(); } }); yaz(db); return Promise.resolve(); },
       ayarKaydet: function(link){ var db = oku(); db.ayar.link = link; yaz(db); return Promise.resolve(); },
-      oneriGonder: function(metin, eposta){ var db = oku(); db.oneriler = db.oneriler || {}; db.oneriler["o" + Date.now()] = { metin:metin, eposta:eposta, okundu:false, olusturma:Date.now() }; yaz(db); return Promise.resolve(); },
+      durumYap: function(ids, durum){ var db = oku(); ids.forEach(function(id){ if (db.kayitlar[id]) { db.kayitlar[id].durum = durum; db.kayitlar[id].degisim = Date.now(); } }); yaz(db); return Promise.resolve(); },
+      oneriGonder: function(metin, eposta, gorseller){
+        var db = oku(); db.oneriler = db.oneriler || {}; db.gorseller = db.gorseller || {};
+        var id = "o" + Date.now(), v = { metin:metin, eposta:eposta, okundu:false, olusturma:Date.now() };
+        if (gorseller.length) { v.gorsel = gorseller.length; db.gorseller[id] = gorseller; }
+        db.oneriler[id] = v; yaz(db); return Promise.resolve();
+      },
+      oneriGorselleri: function(id){ return Promise.resolve(((oku().gorseller || {})[id]) || []); },
       oneriIzle: function(cb){ dinle(function(){ var o = oku().oneriler || {}; cb(Object.keys(o).map(function(id){ return Object.assign({ id:id }, o[id]); })); }); },
       oneriOkundu: function(id, v){ var db = oku(); if (db.oneriler && db.oneriler[id]) db.oneriler[id].okundu = v; yaz(db); return Promise.resolve(); },
-      oneriSil: function(id){ var db = oku(); if (db.oneriler) delete db.oneriler[id]; yaz(db); return Promise.resolve(); },
+      oneriSil: function(id){ var db = oku(); if (db.oneriler) delete db.oneriler[id]; if (db.gorseller) delete db.gorseller[id]; yaz(db); return Promise.resolve(); },
       elleIzle: function(cb){ dinle(function(){ cb(oku().elle || ""); }); },
       elleKaydet: function(m){ var db = oku(); db.elle = m; LS.koy(K, JSON.stringify(db)); return Promise.resolve(); }
     };
@@ -377,11 +413,37 @@ textarea{resize:vertical;min-height:130px}
           return b.commit();
         }));
       },
+      durumYap: function(ids, durum){
+        var parcalar = [];
+        for (var i=0;i<ids.length;i+=400) parcalar.push(ids.slice(i,i+400));
+        return Promise.all(parcalar.map(function(p){
+          var b = fs.batch();
+          p.forEach(function(id){ b.update(kayit(id), { durum:durum, degisim: firebase.firestore.FieldValue.serverTimestamp() }); });
+          return b.commit();
+        }));
+      },
       ayarKaydet: function(link){ return ayar.set({ link:link }, { merge:true }); },
-      oneriGonder: function(metin, eposta){ return fs.collection("oneriler").add({ metin:metin, eposta:eposta, okundu:false, olusturma: firebase.firestore.FieldValue.serverTimestamp() }); },
+      // Görseller öneriyle aynı toplu yazmada, öneri belgesinin altındaki "gorseller" koleksiyonuna gider (kimlik 0,1,2; base64 JPEG).
+      oneriGonder: function(metin, eposta, gorseller){
+        var ref = fs.collection("oneriler").doc(), b = fs.batch();
+        var v = { metin:metin, eposta:eposta, okundu:false, olusturma: firebase.firestore.FieldValue.serverTimestamp() };
+        if (gorseller.length) v.gorsel = gorseller.length;
+        b.set(ref, v);
+        gorseller.forEach(function(g, i){ b.set(ref.collection("gorseller").doc(String(i)), { veri:g }); });
+        return b.commit();
+      },
+      oneriGorselleri: function(id){
+        return fs.collection("oneriler").doc(id).collection("gorseller").get().then(function(q){
+          return q.docs.sort(function(a,b){ return a.id < b.id ? -1 : 1; }).map(function(d){ return d.data().veri; });
+        });
+      },
       oneriIzle: function(cb, hataCb){ return fs.collection("oneriler").onSnapshot(function(q){ cb(q.docs.map(function(d){ return Object.assign({ id:d.id }, d.data({ serverTimestamps:"estimate" })); })); }, hataCb || function(){}); },
       oneriOkundu: function(id, v){ return fs.collection("oneriler").doc(id).update({ okundu:v }); },
-      oneriSil: function(id){ return fs.collection("oneriler").doc(id).delete(); },
+      oneriSil: function(id, n){
+        var ref = fs.collection("oneriler").doc(id), b = fs.batch();
+        for (var i=0;i<(n||0);i++) b.delete(ref.collection("gorseller").doc(String(i)));
+        b.delete(ref); return b.commit();
+      },
       elleIzle: function(cb, hataCb){ return fs.collection("yonetim").doc("elle").onSnapshot(function(s){ cb(s.exists ? (s.data().liste || "") : ""); }, hataCb || function(){}); },
       elleKaydet: function(m){ return fs.collection("yonetim").doc("elle").set({ liste:m, guncelleme: firebase.firestore.FieldValue.serverTimestamp() }); }
     };
@@ -404,17 +466,19 @@ textarea{resize:vertical;min-height:130px}
 
   var izlenen = null;
   function durumGoster(k){
-    var tamam = k && k.durum === "tamamlandi";
-    $("durumKutu").className = "durum " + (tamam ? "tamam" : "bekle");
-    $("durumBaslik").textContent = tamam ? "Kaydınız tamamlandı" : "Kaydınız beklemede";
-    $("durumAlt").textContent = tamam ? "Test listesine eklendiniz." : "Ekleme yapıldığında bu kutu otomatik olarak yeşile döner.";
+    var tamam = k && k.durum === "tamamlandi", gec = k && k.durum === "gecersiz";
+    $("durumKutu").className = "durum " + (tamam ? "tamam" : gec ? "uyari" : "bekle");
+    $("durumBaslik").textContent = tamam ? "Kaydınız tamamlandı" : gec ? "Geçersiz e-posta adresi" : "Kaydınız beklemede";
+    $("durumAlt").textContent = tamam ? "Test listesine eklendiniz."
+      : gec ? "Bu adres test listesine eklenemedi. Play Store'da kullandığınız Gmail adresiyle tekrar kayıt olun."
+      : "Ekleme yapıldığında bu kutu otomatik olarak yeşile döner.";
     $("tamamAlan").hidden = !tamam;
+    $("tekrarDugme").hidden = !gec;
   }
   function kayitAc(id, eposta){
     goster("adim3");
     $("kayitPosta").textContent = eposta ? "Kayıtlı adres: " + eposta : "";
-    durumGoster(null);
-    if (izlenen !== id) { izlenen = id; API.izle(id, function(k){ if (izlenen === id) durumGoster(k); }); }
+    if (izlenen !== id) { izlenen = id; durumGoster(null); API.izle(id, function(k){ if (izlenen === id) durumGoster(k); }); }
   }
 
   $("katilDugme").onclick = function(){ goster("adim2"); setTimeout(function(){ $("eposta").focus(); }, 50); };
@@ -433,7 +497,8 @@ textarea{resize:vertical;min-height:130px}
       .then(function(){ d.disabled = false; d.textContent = "Gönder"; });
   });
 
-  $("farkliDugme").onclick = function(){ LS.sil("beta_kayit"); izlenen = null; $("eposta").value = ""; goster("adim2"); };
+  $("farkliDugme").onclick = function(){ LS.sil("beta_kayit"); izlenen = null; $("eposta").value = ""; goster("adim2"); setTimeout(function(){ $("eposta").focus(); }, 50); };
+  $("tekrarDugme").onclick = $("farkliDugme").onclick;
 
   /* ---------- Öneri ---------- */
   var oneriDonus = "adim1";
@@ -446,19 +511,76 @@ textarea{resize:vertical;min-height:130px}
   $("oneriDugme").onclick = oneriAc;
   $("oneriDugme2").onclick = oneriAc;
   $("oneriGeri").onclick = function(){ goster(oneriDonus === "oneri" ? "adim1" : oneriDonus); };
-  $("oneriYeni").onclick = function(){ $("oneriMetin").value = ""; $("oneriSayac").textContent = "0 / 1000"; oneriAc(); };
+  $("oneriYeni").onclick = function(){ $("oneriMetin").value = ""; $("oneriSayac").textContent = "0 / 1000"; gorselTemizle(); oneriAc(); };
   $("oneriMetin").addEventListener("input", function(){ $("oneriSayac").textContent = this.value.length + " / 1000"; });
+
+  /* Görsel ekleme: telefonda küçültülüp JPEG'e çevrilir (en uzun kenar ≤1600 px, belge başına ≤ ~650 KB). */
+  var GMAX = 3, GBOYUT = 880000, gorseller = [], gorselIsleniyor = 0;
+  function kucult(dosya){
+    return new Promise(function(ok, red){
+      var url = URL.createObjectURL(dosya), im = new Image();
+      im.onload = function(){
+        URL.revokeObjectURL(url);
+        var en = 1600, q = .82, w0 = im.naturalWidth, h0 = im.naturalHeight;
+        if (!w0 || !h0) { red(new Error("bos")); return; }
+        for (var i=0;i<7;i++){
+          var k = Math.min(1, en / Math.max(w0, h0)), c = document.createElement("canvas");
+          c.width = Math.max(1, Math.round(w0*k)); c.height = Math.max(1, Math.round(h0*k));
+          var x = c.getContext("2d"); x.fillStyle = "#000"; x.fillRect(0,0,c.width,c.height); x.drawImage(im, 0, 0, c.width, c.height);
+          var s = c.toDataURL("image/jpeg", q).split(",")[1] || "";
+          if (s && s.length <= GBOYUT) { ok(s); return; }
+          en = Math.round(en*.8); q = Math.max(.55, q-.07);
+        }
+        red(new Error("buyuk"));
+      };
+      im.onerror = function(){ URL.revokeObjectURL(url); red(new Error("okunamadi")); };
+      im.src = url;
+    });
+  }
+  function gorselCiz(){
+    var kap = $("gorselOn"); kap.textContent = "";
+    gorseller.forEach(function(g, i){
+      var k = document.createElement("div"); k.className = "kucuk";
+      var im = document.createElement("img"); im.alt = "Eklenen görsel " + (i+1); im.src = "data:image/jpeg;base64," + g;
+      var x = document.createElement("button"); x.type = "button"; x.className = "x"; x.setAttribute("aria-label", "Görseli kaldır"); x.textContent = "×";
+      x.onclick = function(){ gorseller.splice(i, 1); gorselCiz(); };
+      k.appendChild(im); k.appendChild(x); kap.appendChild(k);
+    });
+    var dolu = gorseller.length >= GMAX;
+    $("gorselSec").hidden = dolu;
+    $("gorselSec").disabled = !!gorselIsleniyor;
+    $("gorselSec").textContent = gorselIsleniyor ? "Görsel hazırlanıyor…" : "📷 Görsel ekle" + (gorseller.length ? " (" + gorseller.length + "/" + GMAX + ")" : "");
+    $("gorselNot").textContent = dolu ? "En çok " + GMAX + " görsel ekleyebilirsin." : "Ekran görüntüsü ya da fotoğraf ekleyebilirsin.";
+  }
+  function gorselTemizle(){ gorseller = []; $("oneriGorsel").value = ""; gorselCiz(); }
+  $("gorselSec").onclick = function(){ $("oneriGorsel").click(); };
+  $("oneriGorsel").addEventListener("change", function(){
+    var dosyalar = Array.prototype.slice.call(this.files || []).filter(function(f){ return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name); });
+    this.value = "";
+    var yer = GMAX - gorseller.length;
+    if (dosyalar.length > yer) $("oneriHata").textContent = "En çok " + GMAX + " görsel ekleyebilirsin; ilk " + Math.max(yer,0) + " tanesi alındı.";
+    else $("oneriHata").textContent = "";
+    dosyalar = dosyalar.slice(0, Math.max(yer, 0));
+    if (!dosyalar.length) return;
+    gorselIsleniyor++; gorselCiz();
+    dosyalar.reduce(function(p, f){
+      return p.then(function(){ return kucult(f).then(function(s){ if (gorseller.length < GMAX) gorseller.push(s); gorselCiz(); })
+        .catch(function(){ $("oneriHata").textContent = "Bir görsel açılamadı. JPEG ya da PNG ekran görüntüsü deneyin."; }); });
+    }, Promise.resolve()).then(function(){ gorselIsleniyor--; gorselCiz(); });
+  });
+
   $("oneriForm").addEventListener("submit", function(ev){
     ev.preventDefault();
     var m = $("oneriMetin").value.trim(), e = $("oneriPosta").value.trim().toLowerCase();
     $("oneriHata").textContent = "";
+    if (gorselIsleniyor) { $("oneriHata").textContent = "Görsel hazırlanıyor, bir saniye bekle."; return; }
     if (m.length < 3) { $("oneriHata").textContent = "Lütfen önerini yaz (en az 3 karakter)."; return; }
     if (e && (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) || e.length > 120)) { $("oneriHata").textContent = "E-posta adresi geçersiz. Boş bırakabilir ya da düzeltebilirsin."; return; }
     var d = $("oneriGonder"); d.disabled = true; d.textContent = "Gönderiliyor…";
-    API.oneriGonder(m.slice(0,1000), e).then(function(){
+    API.oneriGonder(m.slice(0,1000), e, gorseller.slice(0, GMAX)).then(function(){
       $("oneriForm").hidden = true; $("oneriTamam").hidden = false; $("oneriYeni").hidden = false;
-      $("oneriMetin").value = ""; $("oneriSayac").textContent = "0 / 1000";
-    }).catch(function(){ $("oneriHata").textContent = "Gönderilemedi. İnternet bağlantını kontrol edip tekrar dene."; })
+      $("oneriMetin").value = ""; $("oneriSayac").textContent = "0 / 1000"; gorselTemizle();
+    }).catch(function(){ $("oneriHata").textContent = gorseller.length ? "Gönderilemedi. Görselleri kaldırıp tekrar deneyebilir ya da internet bağlantını kontrol edebilirsin." : "Gönderilemedi. İnternet bağlantını kontrol edip tekrar dene."; })
       .then(function(){ d.disabled = false; d.textContent = "Öneriyi gönder"; });
   });
 
@@ -497,15 +619,52 @@ textarea{resize:vertical;min-height:130px}
     $("sekmeYeni").classList.toggle("on", ad === "yeni");
     $("sekmeTamam").classList.toggle("on", ad === "tamam");
     $("sekmeOneri").classList.toggle("on", ad === "oneri");
+    $("sekmeGecersiz").classList.toggle("on", ad === "gecersiz");
     $("yeniBolum").hidden = ad !== "yeni";
     $("tamamBolum").hidden = ad !== "tamam";
     $("oneriBolum").hidden = ad !== "oneri";
-    $("linkForm").hidden = ad === "oneri";
+    $("gecersizBolum").hidden = ad !== "gecersiz";
+    $("linkForm").hidden = ad === "oneri" || ad === "gecersiz";
   }
   function tamamSayGuncelle(){
     var n = seciliIdler().length, d = $("tamamlaDugme");
     if (d.textContent !== "Kaydediliyor…") d.textContent = "Kayıtlar tamamlandı (" + n + ")";
     d.disabled = !n;
+    var g = $("gecersizDugme");
+    if (g.textContent !== "İşaretleniyor…") g.textContent = gecersizOnay && gecersizOnay === n ? n + " adres geçersiz işaretlensin mi? Evet" : "Seçilenleri geçersiz işaretle (" + n + ")";
+    g.disabled = !n;
+  }
+  var gecersizOnay = 0, gecersizZaman = null;
+  $("gecersizDugme").onclick = function(){
+    var ids = seciliIdler();
+    if (!ids.length) { bilgi("Önce en az bir adres seçin."); return; }
+    if (gecersizOnay !== ids.length) {
+      gecersizOnay = ids.length; tamamSayGuncelle();
+      clearTimeout(gecersizZaman); gecersizZaman = setTimeout(function(){ gecersizOnay = 0; tamamSayGuncelle(); }, 5000);
+      return;
+    }
+    gecersizOnay = 0; clearTimeout(gecersizZaman);
+    var d = this; d.disabled = true; d.textContent = "İşaretleniyor…";
+    API.durumYap(ids, "gecersiz").then(function(){
+      ids.forEach(function(id){ delete secili[id]; });
+      bilgi(ids.length + " adres geçersiz işaretlendi. Sahipleri sarı uyarı görecek.");
+    }).catch(function(){ bilgi("İşaretlenemedi, tekrar deneyin."); })
+      .then(function(){ d.textContent = ""; yeniCiz(); });
+  };
+  function gecersizCiz(d){
+    var s = $("gecersizSay"); s.textContent = d.length;
+    var kap = $("gecersizListe"); kap.textContent = "";
+    if (!d.length) { var b = document.createElement("div"); b.className = "bos"; b.textContent = "Geçersiz işaretlenen adres yok."; kap.appendChild(b); return; }
+    d.forEach(function(k){
+      var el = document.createElement("div"); el.className = "gsatir";
+      var ic = document.createElement("div"); ic.className = "ic";
+      var ep = document.createElement("span"); ep.className = "ep"; ep.textContent = k.eposta;
+      var zm = document.createElement("span"); zm.className = "zm"; zm.textContent = "Başvuru: " + zaman(k.olusturma) + (k.degisim ? " · İşaretlendi: " + zaman(k.degisim) : "");
+      ic.appendChild(ep); ic.appendChild(zm);
+      var gr = document.createElement("button"); gr.type = "button"; gr.className = "dugme ikincil"; gr.textContent = "Beklemeye al";
+      gr.onclick = function(){ gr.disabled = true; API.durumYap([k.id], "beklemede").then(function(){ bilgi(k.eposta + " yeniden beklemede."); }).catch(function(){ gr.disabled = false; bilgi("Geri alınamadı."); }); };
+      el.appendChild(ic); el.appendChild(gr); kap.appendChild(el);
+    });
   }
   function seciliIdler(){ return yeniler.filter(function(k){ return secili[k.id]; }).map(function(k){ return k.id; }); }
   function bilgi(m){ $("panelBilgi").textContent = m; if (m) setTimeout(function(){ if ($("panelBilgi").textContent === m) $("panelBilgi").textContent = ""; }, 4000); }
@@ -545,12 +704,46 @@ textarea{resize:vertical;min-height:130px}
       var s = $("tamamSay"); s.textContent = d.length;
       liste($("tamamListe"), d, false, "Henüz tamamlanan kayıt yok.");
     });
+    API.listeIzle("gecersiz", function(d){
+      d.sort(function(a,b){ return ms(b.degisim) - ms(a.degisim); });
+      gecersizCiz(d);
+    });
   }
 
   $("sekmeYeni").onclick = function(){ sekme("yeni"); };
   $("sekmeTamam").onclick = function(){ sekme("tamam"); };
   $("sekmeOneri").onclick = function(){ sekme("oneri"); };
-  var silOnay = null;
+  $("sekmeGecersiz").onclick = function(){ sekme("gecersiz"); };
+  var silOnay = null, gorselOnbellek = {}, gorselYukleniyor = {};
+  function buyukAc(src){
+    var o = document.createElement("div"); o.id = "buyuk"; o.setAttribute("role", "dialog");
+    var im = document.createElement("img"); im.src = src; im.alt = "Öneri görseli";
+    o.appendChild(im); o.onclick = function(){ o.remove(); };
+    document.body.appendChild(o);
+  }
+  function oneriGorselAlan(o){
+    var kap = document.createElement("div"); kap.className = "gorseller";
+    var g = gorselOnbellek[o.id];
+    if (!g) {
+      var not = document.createElement("span"); not.className = "gorsel-not";
+      not.textContent = gorselYukleniyor[o.id] === "hata" ? "🖼 Görseller açılamadı." : "🖼 " + o.gorsel + " görsel yükleniyor…";
+      kap.appendChild(not);
+      if (!gorselYukleniyor[o.id]) {
+        gorselYukleniyor[o.id] = 1;
+        API.oneriGorselleri(o.id).then(function(d){ gorselOnbellek[o.id] = d; }, function(){ gorselYukleniyor[o.id] = "hata"; })
+          .then(function(){ oneriCiz(sonOneriler); });
+      }
+      return kap;
+    }
+    if (!g.length) { var y = document.createElement("span"); y.className = "gorsel-not"; y.textContent = "🖼 Görsel bulunamadı."; kap.appendChild(y); }
+    g.forEach(function(v, i){
+      var b = document.createElement("button"); b.type = "button"; b.className = "kucuk"; b.setAttribute("aria-label", "Görseli büyüt " + (i+1));
+      var im = document.createElement("img"); im.src = "data:image/jpeg;base64," + v; im.alt = "";
+      b.appendChild(im); b.onclick = function(){ buyukAc(im.src); };
+      kap.appendChild(b);
+    });
+    return kap;
+  }
   function oneriCiz(d){
     var kap = $("oneriListe"); kap.textContent = "";
     var okunmamis = d.filter(function(o){ return !o.okundu; }).length;
@@ -571,10 +764,12 @@ textarea{resize:vertical;min-height:130px}
       sl.textContent = silOnay === o.id ? "Silinsin mi? Evet" : "Sil";
       sl.onclick = function(){
         if (silOnay !== o.id) { silOnay = o.id; oneriCiz(sonOneriler); return; }
-        silOnay = null; API.oneriSil(o.id).catch(function(){ bilgi("Silinemedi."); });
+        silOnay = null; API.oneriSil(o.id, o.gorsel || 0).catch(function(){ bilgi("Silinemedi."); });
       };
       ar.appendChild(ok); ar.appendChild(sl);
-      el.appendChild(mt); el.appendChild(ob); el.appendChild(ar); kap.appendChild(el);
+      el.appendChild(mt);
+      if (o.gorsel > 0) el.appendChild(oneriGorselAlan(o));
+      el.appendChild(ob); el.appendChild(ar); kap.appendChild(el);
     });
   }
   var sonOneriler = [];
